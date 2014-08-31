@@ -9,4 +9,6 @@ ECE437 Processors
 - 2 read ports each 32 bits wide.
 - 1 write ports 32 bits wide.
 - Each port has select signal 5 bits wide.
+- A write enable signal (WEN) 1 bit wide to control storing value to register file.
 - 
+**ALU**
