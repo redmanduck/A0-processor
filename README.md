@@ -1,6 +1,6 @@
 ECE437 Processors 
 =================
-**Register file (register_file.sv)**
+## Register file (register_file.sv)
 
 - Each location is 32 bits wide.
 - The 0th location will have constant value of 0, the remaining 31 locations can store any value
@@ -10,5 +10,6 @@ ECE437 Processors
 - 1 write ports 32 bits wide.
 - Each port has select signal 5 bits wide.
 - A write enable signal (WEN) 1 bit wide to control storing value to register file.
-- 
-**ALU**
+
+
+## ALU 
