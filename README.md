@@ -12,4 +12,15 @@ ECE437 Processors
 - A write enable signal (WEN) 1 bit wide to control storing value to register file.
 
 
-## ALU 
+## ALU (alu.sv)
+
+Purely combinational computational unit of the processor.
+
+- Each port is 32 bits wide
+- 2 input ports and 1 output port
+- Input a 4 bits wide opcode to select operation to perform
+- Output negative, zero and overflow flag bits
+- Operations (ALUOP)
+  - Logical Shift (left, right), And, Or, Xor, Nor.
+  - Signed add/subtract
+  - Set less than signed and unsigned
