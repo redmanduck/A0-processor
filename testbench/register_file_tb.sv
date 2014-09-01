@@ -48,5 +48,28 @@ module register_file_tb;
 
 endmodule
 
-program test;
+program test(input register_file_if.rf rfif);
+   //write test program here
+   initial begin
+       //Reset
+       #(PERIOD*2);
+       rfif.wsel = 1'b0;
+       rfif.WEN = 1'b0;
+       rfif.wdat = 1'b0;
+       rfif.rsel1 = 1'b0;
+       rfif.rsel2 = 1'b0;
+
+       #(PERIOD*2);
+       $display("Writing to register 0");
+       rfif.wsel =1'b0;
+       rfif.WEN = 1'b1;
+       rfif.wdat = 32'hABABABAB;
+
+       #(PERIOD*2);
+       $display("Writing to register 31");
+       rfif.wsel = 1'b0;
+       rfif.WEN = 1'b1;
+       rfif.wdat = 32'hBABABA00;
+   end
 endprogram
+
