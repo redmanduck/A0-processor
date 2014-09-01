@@ -2,6 +2,9 @@
   Eric Villasenor
   evillase@gmail.com
 
+  S. Pat Sabpisal
+  ssabpisa@purdue.edu
+
   register file test bench
 */
 
