@@ -48,9 +48,10 @@ module register_file_tb;
 
 endmodule
 
-program test(input register_file_if.rf rfif);
+program test(register_file_if.rf rfif);
    //write test program here
    initial begin
+       parameter PERIOD = 10;
        //Reset
        #(PERIOD*2);
        rfif.wsel = 1'b0;
