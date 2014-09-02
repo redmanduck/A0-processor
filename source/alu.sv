@@ -1,12 +1,11 @@
-`include "control_hazard_alu_if.vh"
 `include "cpu_types_pkg.vh"
 
 import cpu_types_pkg::*;
 
 module alu(
-        output logic [3:0] ALUOP,
-        output logic [31:0] Port_A,
-        output logic [31:0] Port_B,
+        input logic [3:0] ALUOP,
+        input logic [31:0] Port_A,
+        input logic [31:0] Port_B,
         output logic negative,
         output logic overflow,
         output logic [31:0] output_port,
@@ -46,7 +45,7 @@ always_comb begin : decoder
             //Set if less than
             if (Port_A < Port_B) begin
                output_port = 1'b1;
-            else begin
+            end else begin
                output_port = 1'b0;
             end
 
@@ -60,7 +59,7 @@ always_comb begin : decoder
             output_port = Port_A - Port_B;
         end
         ALU_NOR: begin
-            overflow = 1'b0;
+            //#overflow = 1'b0;
             output_port = ~(Port_B | Port_A);
         end
     endcase
