@@ -68,7 +68,7 @@ program test(output logic nRST, register_file_if.rf rfif);
       nRST = 1'b1;
 
       #(PERIOD*2);
-      $display("Writing to register 20");
+      $display("Writing to register 0x14");
       rfif.wsel <= 5'h14;
       rfif.WEN <= 1'b1;
       rfif.wdat <= 32'hAAAAAAAA;
@@ -77,11 +77,36 @@ program test(output logic nRST, register_file_if.rf rfif);
 
       //Reading back verification
 
-      $display("Reading back from register 20");
+      $display("Reading back from register 0x14");
       rfif.rsel1 <= 5'h14;
       rfif.WEN <= 1'b0;
       #(PERIOD*2);
       $display("Value is %h", rfif.rdat1);
+
+
+      #(PERIOD*2);
+      $display("Writing gibberish to register 0");
+      rfif.wsel <= 5'h0;
+      rfif.wdat <= 32'hABABABAB;
+      rfif.WEN <= 1'b1;
+      #(PERIOD*2);
+      $display("Verifying that register 0 is still 0");
+      rfif.rsel1 <= 5'h0;
+      rfif.WEN <= 1'b0;
+      $display("Value is %h", rfif.rdat2);
+
+      #(PERIOD*2);
+      $display("Writing to register 0x0C");
+      rfif.wsel <= 5'h0C;
+      rfif.WEN <= 1'b1;
+      rfif.wdat <= 32'h5C5CAC5C;
+      #(PERIOD*2);
+      $display("Reading back from 0x0C, 0x14");
+      rfif.WEN <= 1'b0;
+      rfif.rsel1 <= 5'h0C;
+      rfif.rsel2 <= 5'h14;
+      #(PERIOD*2);
+      $display("Values are 0x0C = %h | 0x14 = %h", rfif.rdat1, rfif.rdat2);
 
    end
 endprogram
