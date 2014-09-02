@@ -25,6 +25,7 @@ assign rfif.rsel1 = SW[9:5];
 assign rfif.rsel2 = SW[14:10];
 assign rfif.wdat = {29'b0,SW[17:15]};
 
+//Press Key 3 to not write
 assign rfif.WEN = ~KEY[3];
 
 assign LEDR[8:5] = rfif.rdat1[3:0];
