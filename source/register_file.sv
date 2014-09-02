@@ -5,25 +5,32 @@
   register file
 
 */
-`include "register_file_if.vh";
+`include "register_file_if.vh"
 import cpu_types_pkg::*;
 
 module register_file (
   input logic CLK,
-  input logic nRst,
+  input logic nRST,
   register_file_if.rf rfif
 );
 
-word_t regs; //no need to specify [31:0] right?
+//word_t
+word_t [31:0] regs;
 
-always_ff @(posedge CLK, negedge nRst) begin
-  if (nRst == 1'b0) begin
+always_ff @(posedge CLK, negedge nRST) begin
+  //regs[0] = 0;
+  if (nRST == 1'b0) begin
     //Reset all modifiable locations to a value of 0x00000000
-    regs <= 0;
-  end
-  else if (rfif.WEN) begin
+      int i;
+      for (i=0;i<32;i=i+1) begin : resetloop
+        regs[i] = 32'h00000000;
+      end
+
+  end else if (rfif.WEN == 1'b1) begin
     //Write mode
-    regs[rfif.wsel] <= rfif.wdat;
+    if(rfif.wsel != 0) begin
+      regs[rfif.wsel] <= rfif.wdat;
+    end
   end
 end
 

@@ -31,7 +31,7 @@ module register_file_tb;
   // interface
   register_file_if rfif ();
   // test program
-  test PROG (rfif);
+  test PROG (nRST, rfif);
   // DUT
 `ifndef MAPPED
   register_file DUT(CLK, nRST, rfif);
@@ -51,11 +51,13 @@ module register_file_tb;
 
 endmodule
 
-program test(register_file_if.rf rfif);
+program test(output logic nRST, register_file_if.rf rfif);
    //write test program here
    initial begin
        parameter PERIOD = 10;
        //Reset
+       nRST = 1'b0;
+
        #(PERIOD*2);
        rfif.wsel <= 5'b0;
        rfif.WEN <= 1'b0;
@@ -63,30 +65,20 @@ program test(register_file_if.rf rfif);
        rfif.rsel1 <= 1'b0;
        rfif.rsel2 <= 1'b0;
 
-       #(PERIOD*2);
-       $display("Writing to register 0");
-       rfif.wsel <= 5'b0;
-       rfif.WEN <= 1'b1;
-       rfif.wdat <= 32'hFFFFFFF;
-
-       #(PERIOD*2);
-       $display("Writing to register 31");
-       rfif.wsel <= 5'h0C;
-       rfif.WEN <= 1'b1;
-       rfif.wdat <= 32'hBABABA00;
+      nRST = 1'b1;
 
       #(PERIOD*2);
       $display("Writing to register 20");
-      rfif.wsel <= 5'h0A;
+      rfif.wsel <= 5'h14;
       rfif.WEN <= 1'b1;
-      rfif.wdat <= 500;
+      rfif.wdat <= 32'hAAAAAAAA;
 
       #(PERIOD*10);
 
       //Reading back verification
 
-      $display("Reading back from register 31");
-      rfif.rsel1 <= 0;
+      $display("Reading back from register 20");
+      rfif.rsel1 <= 5'h14;
       rfif.WEN <= 1'b0;
       #(PERIOD*2);
       $display("Value is %h", rfif.rdat1);
