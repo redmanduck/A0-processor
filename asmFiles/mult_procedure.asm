@@ -4,12 +4,14 @@
 
    org    0x0000
    addi   $sp, $0, 0xFFFC
-   addi   $15, $0, 2                # operands
+   addi   $15, $0, 5                # operands
    addi   $16, $0, 2
-   addi   $14, $0, 0xFFF8           # R14 save the sp state
+   addu   $14, $sp, $0           # R14 save the sp state
+   addi   $14, $14, -4
    push   $15
    push   $16
    push   $16
+   push   $15
    jal    mult_procedure
 mult_procedure:
   beq    $14, $sp, end_mult_procedure
