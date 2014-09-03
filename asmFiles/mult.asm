@@ -19,5 +19,5 @@ mloop:
   j      mloop
 mult_done:
   #push   $19
-  #addi   $31,  $19, 0
+  addi   $31,  $19, 0
   halt
