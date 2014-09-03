@@ -1,21 +1,23 @@
- org    0x0000
- addiu  $sp, $0, 0xFFFC     # Initialize stack pointer to address 0xFFFC
- addi  $sp, $sp, -8        # allocate 2 spaces
- lui    $15, 2              # operands
- lui    $16, 3
- push   $15
- push   $16
- halt
+  org    0x0000
+  addiu  $sp, $0, 0xFFFC       # Initialize stack pointer to address 0xFFFC
+# addi  $sp, $sp, -8           # allocate 2 spaces
+  addi    $15, $0, 6                # operands
+  addi    $16, $0, 5
+  push   $15
+  push   $16
+
 mult:
-  pop    $16
+  pop    $18
   pop    $17
-  lw     $18, 0($0)
-  beq    $16,  $0, mult_done        # skip if operand is 0
+  lui    $8, 0
+  lui    $19, 0
+  beq    $17,  $0, mult_done        # skip if operand is 0
 mloop:
-  beq    $17,  $0, mult_done   # exit condition
-  addu   $18,  $16, $16        # add s0 to itself
-  addi   $17,  $17, -1         # decrement loop
+  beq    $18,  $0, mult_done
+  addu   $19, $17, $19
+  addi   $18,  $18, -1              # decrement loop
   j      mloop
 mult_done:
-  push   $18
-  addi   $31, $18, 0
+  #push   $19
+  #addi   $31,  $19, 0
+  halt
