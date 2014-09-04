@@ -6,12 +6,12 @@
    addiu   $sp, $0, 0xFFFC
    addiu   $15, $0, 5                # operands
    addiu   $16, $0, 2
+   addiu   $13, $0, 10
    addu    $14, $sp, $0           # R14 save the sp state
    addiu   $14, $14, -4
    push    $15
    push    $16
-   push    $16
-   push    $15
+   push    $13
    jal    mult_procedure
 mult_procedure:
   beq    $14, $sp, end_mult_procedure

@@ -7,8 +7,7 @@
 
 */
 
-
-`timescale 1 ns / 1 ns
+//`timescale 1 ns / 1 ns
 `include "cpu_types_pkg.vh"
 import cpu_types_pkg::*;
 
@@ -42,7 +41,7 @@ module alu_tb;
     //Reset
     tb_a = 32'h00000000;
     tb_b = 32'h00000000;
-
+    //$display("Yeahhh! %h", ~(4'b0000));
     #(CLK_PERIOD*2);
 
     $display("Testing 1 bit Anding");
@@ -79,13 +78,13 @@ module alu_tb;
     tb_a <= 32'h55555555;
     tb_b <= 32'hAAAAAAAA;
     #(CLK_PERIOD*2);
-    $display("Result 0x55555555 & 0xAAAAAAAA = 0x%h" , tb_output);
+    $display("Result 0x55555555 | 0xAAAAAAAA = 0x%h" , tb_output);
 
     tb_aluop <= ALU_OR;
     tb_a <= 32'hAAAAAA00;
     tb_b <= 32'h0000000F;
     #(CLK_PERIOD*2);
-    $display("Result 0xAAAAAA00 &  0x0000000F = 0x%h", tb_output);
+    $display("Result 0xAAAAAA00 |  0x0000000F = 0x%h", tb_output);
 
 
     $display("Testing few bits adding\n");
@@ -138,10 +137,18 @@ module alu_tb;
 
     $display("Testing Logical Shift Left (SLL)\n");
     tb_aluop <= ALU_SLL;
-    tb_a <= 32'h00000001;
+    tb_a <= 32'hFFFFFFFF;
+    tb_b <= 32'h00000001;
+    #(CLK_PERIOD*2);
+    $display("-1 << 1 = %b", tb_output);
+
+    $display("Testing SET LESS THAN\n");
+    tb_aluop <= ALU_SLT;
+    tb_a <= 1;
     tb_b <= 5;
     #(CLK_PERIOD*2);
-    $display("0x01 << 5 = %b", tb_output);
+    $display("5 SLT 1 = %b", tb_output);
+
 
 
 end

@@ -18,7 +18,7 @@ module register_file (
 word_t [31:0] regs;
 
 always_ff @(posedge CLK, negedge nRST) begin
-  //regs[0] = 0;
+
   if (nRST == 1'b0) begin
     //Reset all modifiable locations to a value of 0x00000000
   /*    int i;

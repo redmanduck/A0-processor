@@ -2,8 +2,8 @@
   addiu  $sp, $0, 0xFFFC       # Initialize stack pointer to address 0xFFFC
 
 countday:
-  addiu    $15, $0, 3                # currentday
-  addiu    $16, $0, 9                # currentmonth
+  addiu    $15, $0, 28                # currentday
+  addiu    $16, $0, 8                # currentmonth
   addiu    $14, $0, 2014             # currentyear
   addiu    $14, $14, -2000           # get the third term
   addiu    $16, $16, -1
@@ -19,7 +19,8 @@ countday:
   pop      $16    # recycling 16
   addu     $14, $14, $16
   addu     $14, $15, $14
-  addu     $31, $0, $14
+  addu     $31, $0, $14         #ans
+  push     $31
   halt
 
 mult:

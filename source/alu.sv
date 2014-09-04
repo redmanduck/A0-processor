@@ -42,12 +42,19 @@ always_comb begin : decoder
         end
         ALU_SLT: begin
             //Set if less than
-            if (Port_A < Port_B) begin
+            if ($signed(Port_A) < $signed(Port_B)) begin
                output_port = 1'b1;
             end else begin
                output_port = 1'b0;
             end
 
+        end
+        ALU_SLTU: begin
+           if ( $unsigned(Port_A) < $unsigned(Port_B) ) begin
+               output_port = 1'b1;
+           end else begin
+               output_port = 1'b0;
+           end
         end
         ALU_ADD: begin
             //Signed Add
