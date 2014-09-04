@@ -9,6 +9,7 @@
 
 
 `timescale 1 ns / 1 ns
+`include "cpu_types_pkg.vh"
 import cpu_types_pkg::*;
 
 module alu_tb;

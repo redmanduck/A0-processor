@@ -26,21 +26,23 @@ logic nf, vf, zf;
 logic [31:0] ans;
 logic [3:0] op;
 
-//alu ALUT(op, port_a, port_b, nf,vf, ans, zf);
+alu ALUT(op, port_a, port_b, nf,vf, ans, zf);
 
 assign op = KEY[3:0];
-
 
 always_ff @ (posedge CLOCK_50) begin
   if(SW[17]) begin
     port_b[15:0] <= SW[15:0];
+    port_b[31:16] <= {16{SW[16]}};
+  end else begin
+    port_a[15:0] <= SW[15:0];
+    port_a[31:16] <= {16{SW[16]}};
   end
 end
 
-
 always_comb
   begin
-    unique casez (port_b[3:0])
+    unique casez (ans[31:28])
       'h0: HEX7 = 7'b1000000;
       'h1: HEX7 = 7'b1111001;
       'h2: HEX7 = 7'b0100100;
