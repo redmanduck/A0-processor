@@ -17,7 +17,8 @@ module alu_fpga (
   output logic [6:0] HEX4,
   output logic [6:0] HEX5,
   output logic [6:0] HEX6,
-  output logic [6:0] HEX7
+  output logic [6:0] HEX7,
+  output logic LEDR[17:0]
 );
 
 
@@ -29,6 +30,7 @@ logic [3:0] op;
 alu ALUT(op, port_a, port_b, nf,vf, ans, zf);
 
 assign op = KEY[3:0];
+assign LEDR[0] = nf;
 
 always_ff @ (posedge CLOCK_50) begin
   if(SW[17]) begin
