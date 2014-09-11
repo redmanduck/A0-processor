@@ -79,7 +79,7 @@ module memory_control_tb;
 
     //Read bac0k
     #(PERIOD*50);
-    $display("%h", ccif.dload);
+    $display("%h", ccif.dload[0]);
     #(PERIOD*5);
 
     dump_memory();
@@ -118,11 +118,11 @@ module memory_control_tb;
       repeat (2) @(posedge CLK);
       if (ccif.dload === 0)
         continue;
-      values = {8'h04,16'(i),8'h00,ccif.dload};
+      values = {8'h04,16'(i),8'h00,ccif.dload[0]};
       foreach (values[j])
         chksum += values[j];
       chksum = 16'h100 - chksum;
-      ihex = $sformatf(":04%h00%h%h",16'(i),ccif.dload,8'(chksum));
+      ihex = $sformatf(":04%h00%h%h",16'(i),ccif.dload[0],8'(chksum));
       $fdisplay(memfd,"%s",ihex.toupper());
     end //for
     if (memfd)
