@@ -19,11 +19,7 @@ module datapath (
   // import types
   import cpu_types_pkg::*;
 
-  // pc init
-  parameter PC_INIT = 0;
-
-  //@Lab3, implements only R-type, load-store instructions
-  logic [5:0] opcode, funct;
+/*  logic [5:0] opcode, funct;
   logic [4:0] rs, rt, rd, shamt;
   word_t PC_next;
   word_t PC;
@@ -36,22 +32,8 @@ module datapath (
   assign shamt = dpif.imemload[11:6];
   assign funct = dpif.imemload[6:0];
   assign immediate = dpif.imemload[16:0];
+*/
 
-  always_comb begin : PC_ns_logic
-    if (!dpif.halt) begin
-      PC_next = PC + 4;
-    end
-  end
 
-  always_ff @ (posedge CLK, negedge nRST) begin : PC_update_logic
-    if(!n_RST) begin
-      PC <= PC_INIT;
-    end else begin
-      PC <= PC_next;
-    end
-  end
 
-  always_comb begin :
-
-  always_ff @ (posedge CLK, negedge nRST) begin : PC_Load_stuff
 endmodule
