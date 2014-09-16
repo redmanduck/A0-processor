@@ -21,6 +21,9 @@ module program_counter (
    word_t PC_next;
    word_t PC;
 
+   //increase on ihit: otherwise
+   //increase on dhit: ctr_dWEN | ctr_dREN
+
    always_comb begin : PC_ns_logic
     if (!dcif.halt) begin
       PC_next = PC + 4;
