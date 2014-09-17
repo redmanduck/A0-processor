@@ -13,13 +13,14 @@
 module request_unit (
    input CLK, nRST,
    datapath_cache_if.cache dcif,
-   input ctr_iREN, //control request instruction read
-   input ctr_dWEN, //control request data write
-   input ctr_dREN  //control request data read
+   input ctr_iREN, //TODO: needed?? since imemREN is always based on ihit
+   input ctr_dWEN, //control request data write goes to? //control request instruction read goes to MemWR
+   input ctr_dREN  //control request data read goes to ?
 );
 
   import cpu_types_pkg::*;
 
+  //imemREN is not dependent on iHIT?
   assign dcif.imemREN = dcif.ihit ? 0 : 1'b1; // ihit?
 
   always_ff @ (posedge CLK, negedge nRST) begin

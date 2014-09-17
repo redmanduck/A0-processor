@@ -19,6 +19,11 @@ interface ru_cu_if;
   //from request unit to cache
   logic dhit, ihit;
 
+  modport ru (
+     input load_word_en, store_word_en,
+     output dhit, ihit
+  );
+
 endinterface
 
 `endif

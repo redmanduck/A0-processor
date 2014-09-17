@@ -12,22 +12,33 @@
 
 module program_counter (
    input CLK, nRST,
-   datapath_cache_if.cache dcif
+   control_unit_if.control cuif,
+   register_file_if.rf rfif,
+   input ihit, dhit
 );
 
+   //TODO: make interface for pc
    import cpu_types_pkg::*;
    parameter PC_INIT = 0;
 
    word_t PC_next;
    word_t PC;
 
-   //increase on ihit: otherwise
-   //increase on dhit: ctr_dWEN | ctr_dREN
+   //TODO: Increase on ihit: otherwise
+   //TODO: Increase on dhit: ctr_dWEN | ctr_dREN
 
    always_comb begin : PC_ns_logic
-    if (!dcif.halt) begin
-      PC_next = PC + 4;
-    end
+    if (!dcif.pc_en) begin
+      casez (PCSrc) begin
+          case 0: begin // JR
+            PC_next <= rfif.rdat1 //Let $rs go to rsel1
+          end
+          case 1: PC_next <= PC + 4 + IMM16; //fille this in
+          case 2: PC_next <=
+          case 3: PC_next <=
+          default: PC_next = PC + 4;
+        endcase
+      end
   end
 
    always_ff @ (posedge CLK, negedge nRST) begin : PC_update_logic
