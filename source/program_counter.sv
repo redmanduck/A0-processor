@@ -7,9 +7,9 @@
   and its next pc logic
 
 */
-`include "datapath_cache_if.vh"
+`include "control_unit_if.vh"
 `include "cpu_types_pkg.vh"
-
+`include "register_file_if.vh"
 module program_counter (
    input CLK, nRST,
    control_unit_if.control cuif,
@@ -26,20 +26,27 @@ module program_counter (
 
    //TODO: Increase on ihit: otherwise
    //TODO: Increase on dhit: ctr_dWEN | ctr_dREN
-
    always_comb begin : PC_ns_logic
-    if (!dcif.pc_en) begin
-      casez (PCSrc) begin
-          case 0: begin // JR
-            PC_next <= rfif.rdat1 //Let $rs go to rsel1
-          end
-          case 1: PC_next <= PC + 4 + IMM16; //fille this in
-          case 2: PC_next <=
-          case 3: PC_next <=
-          default: PC_next = PC + 4;
+      if(!cuif.pc_en) begin
+       PC_next = PC;
+      end else begin
+        casez (cuif.PCSrc)
+            0: begin
+               //JR
+               PC_next = rfif.rdat1; // (JR) Let $rs go to rsel1
+            end
+            1: begin
+               //J or JAL //TODO: how do i impletement JAL
+               PC_next = cuif.immediate26;
+            end
+            2: begin
+               //BEQ/bne
+               PC_next = PC + cuif.immediate26;
+            end
+            default: PC_next = PC + 4;
         endcase
       end
-  end
+   end
 
    always_ff @ (posedge CLK, negedge nRST) begin : PC_update_logic
     if(!nRST) begin

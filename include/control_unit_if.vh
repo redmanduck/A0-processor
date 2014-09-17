@@ -23,15 +23,15 @@ interface control_unit_if;
   logic ExtOp; //zero extended or sign extended
   aluop_t ALUctr; //select what operation the ALU will do
   logic RegDst; //destination Reg (* what is the size ??)
-  logic [2:0] PCSrc; //select where the hell to increment PC from
+  logic [1:0] PCSrc; //select where the hell to increment PC from
   logic ALUSrc; //select where ALU operand comes from
   logic MemRead;
   logic ALUSrc2; //second level mux selector to select operand from SHAMT
-
+  logic Jump;
   modport control (
     input instruction, alu_zf,
     output opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, MemToReg, RegWr,
-MemWr, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, pc_en
+MemWr, Jump, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, pc_en
   );
 
 endinterface

@@ -26,20 +26,22 @@ module control_unit (
   assign cuif.MemWr = (cuif.opcode == SW ? 1 : 0);
   assign cuif.MemRead = (cuif.opcode == LW || cuif.opcode == LUI ? 1 : 0);
   assign cuif.iREN = 1'b1;
-//  assign cuif.RegWr = (cuif.opcode == RTYPE && (cuif.funct != JR) ? 1 : 0); //everything except JR
-  assign cuif.RegDst = (cuif.opcode == RTYPE);
+  assign cuif.RegDst = (cuif.opcode == LW || cuif.opcode == ORI ? 0 : 1); //RTYPE
+  assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : immediate[15]); //SIGN of immediate??
 
   always_comb begin : PC_CONTROLS
+    cuif.Jump = 1'b0;
     if(cuif.opcode == JR) begin
-       cuif.PCSrc = 1;
+       cuif.PCSrc = 0;
+       cuif.Jump = 1'b1;
     end else if(cuif.opcode == J || cuif.opcode == JAL) begin
+       cuif.PCSrc = 1;
+       cuif.Jump = 1'b1;
+    end else if(cuif.opcode == BEQ && cuif.alu_zf || cuif.opcode == BNE && !cuif.alu_zf) begin
        cuif.PCSrc = 2;
-    end else if(cuif.opcode == BEQ) begin
-       cuif.PCSrc = 3;
-    end else if(cuif.opcode == RTYPE && cuif.funct == JR) begin
-       cuif.PCSrc = 4;
+       cuif.Jump = 1'b0;
     end else begin
-       cuif.PCSrc = 5; //normal mode otherwise
+       cuif.PCSrc = 4; //normal mode otherwise
     end
   end
 
@@ -62,6 +64,9 @@ module control_unit (
     end
   end
 
+  always_comb begin : EXT_CONTROL
+
+  end
 
 
   always_comb begin : ALU_CONTROLS
