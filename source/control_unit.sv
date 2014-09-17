@@ -27,7 +27,8 @@ module control_unit (
   assign cuif.MemRead = (cuif.opcode == LW || cuif.opcode == LUI ? 1 : 0);
   assign cuif.iREN = 1'b1;
   assign cuif.RegDst = (cuif.opcode == LW || cuif.opcode == ORI ? 0 : 1); //RTYPE
-  assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : immediate[15]); //SIGN of immediate??
+  assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : cuif.immediate[15]); //SIGN of immediate?? or immediate26
+  //assign cuif.LUIOP
 
   always_comb begin : PC_CONTROLS
     cuif.Jump = 1'b0;
@@ -63,11 +64,6 @@ module control_unit (
        cuif.RegWr = 0;
     end
   end
-
-  always_comb begin : EXT_CONTROL
-
-  end
-
 
   always_comb begin : ALU_CONTROLS
     if (cuif.opcode == RTYPE) begin

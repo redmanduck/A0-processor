@@ -1,29 +1,40 @@
-`include "datapath_cache_if.vh"
-
+`include "control_unit_if.vh"
+`include "register_file_if.vh"
 `include "cpu_ram_if.vh"
+`include "cpu_types_pkg.vh"
+
 `timescale 1 ns / 1 ns
 
 import cpu_types_pkg::*;
 
 module program_counter_tb;
-
-  datapath_cache_if dcif();
-  assign dcif.halt = 0;
+  register_file_if rfif();
+  control_unit_if cuif();
 
   logic CLK = 0;
-  logic nRST;
+  logic nRST, ihit, dhit;
   parameter PERIOD = 10;
   parameter ADDR_MAX = 40;
 
-  program_counter DUT(CLK, nRST, dcif);
+  register_file RFDUT(CLK, nRST, rfif);
+  program_counter DUT(CLK, nRST, cuif, rfif, ihit, dhit);
+  control_unit CUDUT(CLK, nRST, cuif);
 
   always #(PERIOD/2) CLK++;
 
   initial begin
+   cuif.pc_en = 0;
+   #(PERIOD);
+   cuif.pc_en = 1;
+   cuif.instruction = 32'b0;
+   ihit = 0;
+   dhit = 0;
    nRST = 1'b0;
    #(PERIOD);
    nRST = 1'b1;
-   #(PERIOD*10);
+   #(PERIOD*5);
+   cuif.instruction = {RTYPE, 5'b0, 5'b1, 5'hA, 5'h0, SUB};
+   #(PERIOD*100);
    $finish;
   end
 

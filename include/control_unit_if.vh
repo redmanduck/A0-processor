@@ -34,6 +34,12 @@ interface control_unit_if;
 MemWr, Jump, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, pc_en
   );
 
+  modport tb (
+    output instruction, alu_zf,
+    input opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, MemToReg, RegWr,
+MemWr, Jump, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, pc_en
+  );
+
 endinterface
 
 
