@@ -34,6 +34,10 @@ module program_counter_tb;
    nRST = 1'b1;
    #(PERIOD*5);
    cuif.instruction = {RTYPE, 5'b0, 5'b1, 5'hA, 5'h0, SUB};
+   #(PERIOD);
+   cuif.instruction = {RTYPE, 5'hC, 5'h9, 5'hF, 5'h0, ADD};
+   #(PERIOD);
+   cuif.instruction = {JAL, 26'hABCD};
    #(PERIOD*100);
    $finish;
   end

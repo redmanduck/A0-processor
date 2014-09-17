@@ -23,7 +23,7 @@ interface control_unit_if;
   logic ExtOp; //zero extended or sign extended
   aluop_t ALUctr; //select what operation the ALU will do
   logic RegDst; //destination Reg (* what is the size ??)
-  logic [1:0] PCSrc; //select where the hell to increment PC from
+  logic [2:0] PCSrc; //select where the hell to increment PC from
   logic ALUSrc; //select where ALU operand comes from
   logic MemRead;
   logic ALUSrc2; //second level mux selector to select operand from SHAMT
