@@ -38,6 +38,8 @@ module control_unit (
   always_comb begin : EXTOP
     casez(cuif.opcode)
       ORI: cuif.ExtOp = 0;
+      XORI: cuif.ExtOp = 0;
+      ANDI: cuif.ExtOp = 0;
       default: cuif.ExtOp = cuif.immediate[15];
     endcase
   end

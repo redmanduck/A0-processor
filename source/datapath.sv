@@ -91,6 +91,8 @@ module datapath (
           alu_b = rfif.rdat2;
        end else if(cuif.ALUSrc2) begin
           alu_b = cuif.shamt;
+       end else if(cuif.ExtOp) begin
+          alu_b = $signed(cuif.immediate);
        end else begin //TODO: switch based on ExtOp
           alu_b = cuif.immediate;
        end
