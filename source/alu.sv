@@ -39,7 +39,7 @@ always_comb begin : decoder
             output_port = Port_B | Port_A;
         end
         ALU_XOR: begin
-            output_port = (~Port_B) & Port_A;
+            output_port = Port_B ^ Port_A;
         end
         ALU_SLT: begin
             //Set if less than

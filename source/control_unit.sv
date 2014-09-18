@@ -32,7 +32,7 @@ module control_unit (
   assign cuif.dREN = cuif.MemToReg;
   assign cuif.dWEN = cuif.MemWr;
   //maybe refactorable?
-  assign cuif.RegDst = (cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1); //RTYPE
+  assign cuif.RegDst = (cuif.opcode == XORI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1); //RTYPE
 //  assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : cuif.immediate[15]); //SIGN of immediate?? or immediate26
 
   always_comb begin : EXTOP
@@ -49,15 +49,25 @@ module control_unit (
   //if uncomment below, halt signal become 0 ,
   //everythings BREAK!!
 
-
-  always_comb begin : HALTER
+  always_ff @ (posedge CLK, negedge nRST) begin
+     if(!nRST) begin
+       cuif.halt = 0;
+     end else if(cuif.opcode == HALT) begin
+       cuif.halt = 1;
+     end else begin
+       cuif.halt = 0;
+     end
+  end
+/*
+ always_comb begin : HALTER
     casez(cuif.opcode)
       HALT: cuif.halt = 1;
       default: cuif.halt = 0;
     endcase
   end
-
+*/
  //TODO: latch the halt
+
 
   always_comb begin : PC_CONTROLS
     cuif.Jump = 1'b0; //for what?
@@ -97,7 +107,7 @@ module control_unit (
   always_comb begin : ALU_CONTROLS
     if (cuif.opcode == RTYPE) begin
       //do RTYPE operations
-      cuif.ALUSrc2 = 1'b0; //Doesnt matter because ALUSrc is 0
+      cuif.ALUSrc2 = 1'b0; //Doesnt matter if ALUSrc is 0
       cuif.ALUSrc = 1'b0; //Register
       cuif.ALUctr = ALU_ADD; //some useless default
       casez (cuif.funct)
@@ -109,8 +119,16 @@ module control_unit (
         OR:   cuif.ALUctr = ALU_OR;
         SLT:  cuif.ALUctr = ALU_SLT;
         SLTU: cuif.ALUctr = ALU_SLTU;
-        SLL:  cuif.ALUctr = ALU_SLL;
-        SRL:  cuif.ALUctr = ALU_SRL;
+        SLL:  begin
+          cuif.ALUctr = ALU_SLL;
+          cuif.ALUSrc = 1'b1;
+          cuif.ALUSrc2 = 1'b1;
+        end
+        SRL:  begin
+          cuif.ALUctr = ALU_SRL;
+          cuif.ALUSrc = 1'b1;
+          cuif.ALUSrc2 = 1'b1;
+        end
         SUBU: cuif.ALUctr = ALU_SUB;
         SUB: cuif.ALUctr = ALU_SUB;
         XOR: cuif.ALUctr = ALU_XOR;

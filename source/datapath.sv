@@ -89,11 +89,12 @@ module datapath (
    always_comb begin : MUX_ALUB
        if(!cuif.ALUSrc) begin
           alu_b = rfif.rdat2;
-       end else begin
+       end else if(cuif.ALUSrc2) begin
+          alu_b = cuif.shamt;
+       end else begin //TODO: switch based on ExtOp
           alu_b = cuif.immediate;
        end
    end
-
 
 /*  always_comb begin : MUX_WRITESRC
     if(cuif.MemToReg) begin
