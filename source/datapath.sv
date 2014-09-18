@@ -23,7 +23,8 @@ module datapath (
   // import types
   import cpu_types_pkg::*;
   parameter PC_INIT = 0;
-
+  logic megatron;
+  assign megatron = CLK;
   control_unit_if cuif();
   register_file_if rfif();
   ru_cu_if rqif();
@@ -68,13 +69,13 @@ module datapath (
   assign dpif.dmemREN = rqif.dmemREN;
   assign dpif.dmemWEN = rqif.dmemWEN;
   assign dpif.dmemstore = rfif.rdat2;
-  
+  assign dpif.dmemaddr = alu_output;
 
   assign pcif.ihit = ihit;
   assign pcif.dhit = dhit;
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = cuif.pc_en;
+  assign pcif.pc_en = !cuif.halt & dpif.ihit;
   assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
 
@@ -83,7 +84,16 @@ module datapath (
 
   assign alu_op = cuif.ALUctr;
   assign alu_a = rfif.rdat1;
-  assign alu_b = (!cuif.ALUSrc ? rfif.rdat2 : (cuif.ALUSrc2 ? cuif.shamt : ( cuif.ExtOp ? $signed(cuif.immediate) : {16'b0, cuif.immediate} ) ));  //TODO: double check ALUSrc2 mux input
+//  assign alu_b = 0; //(!cuif.ALUSrc ? rfif.rdat2 : (cuif.ALUSrc2 ? cuif.shamt : ( cuif.ExtOp ? $signed(cuif.immediate) : {16'b0, cuif.immediate} ) ));  //TODO: double check ALUSrc2 mux input
+
+   always_comb begin : MUX_ALUB
+       if(!cuif.ALUSrc) begin
+          alu_b = rfif.rdat2;
+       end else begin
+          alu_b = cuif.immediate;
+       end
+   end
+
 
 /*  always_comb begin : MUX_WRITESRC
     if(cuif.MemToReg) begin
@@ -95,6 +105,6 @@ module datapath (
     end
   end
 */
-  assign dpif.halt = !cuif.pc_en; //TODO: double check
+  assign dpif.halt = cuif.halt; //TODO: double check
 
 endmodule

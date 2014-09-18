@@ -59,7 +59,7 @@ always_comb begin : control_operations
         // if data is begin read or written
         // Instruction Fetch will wait
 
-        ccif.iwait = ccif.dREN | ccif.dWEN;
+        ccif.iwait = ccif.dREN[CPUID] | ccif.dWEN[CPUID];
       end
       BUSY: begin
         //memory is being read
@@ -87,18 +87,18 @@ always_comb begin : priority_control_mux
     ccif.ramaddr = 32'b0;
 
     //Prioritizes the data
-    if(ccif.dREN) begin
+    if(ccif.dREN[CPUID] == 1'b1) begin
       //if cache wants to read from RAM (data)
       ccif.ramREN = 1'b1;
       ccif.ramaddr = ccif.daddr;
-    end else if (ccif.dWEN) begin
+    end else if (ccif.dWEN[CPUID] == 1'b1) begin
      //if cache wants to write to RAM (data)
       ccif.ramWEN = 1'b1;
       ccif.ramaddr = ccif.daddr;
-    end else if (ccif.iREN) begin
+    end else if (ccif.iREN[CPUID] == 1'b1) begin
      //if cache wants to read Instruction from RAM
       ccif.ramREN = 1'b1;
-      ccif.ramaddr = ccif.daddr;
+      ccif.ramaddr = ccif.iaddr;
     end
 end
 

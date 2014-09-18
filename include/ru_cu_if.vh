@@ -17,9 +17,12 @@ interface ru_cu_if;
 
   logic ctr_iREN, ctr_dWEN, ctr_dREN;
 
+
+  //output to cache
+  //input to datapath (controller)
   modport ru (
-     output imemREN, dmemREN, dmemWEN,
-     input dhit, ihit, ctr_iREN, ctr_dWEN, ctr_dREN
+     input dhit, ihit, ctr_iREN, ctr_dWEN, ctr_dREN,
+     output imemREN, dmemREN, dmemWEN
   );
 
 endinterface

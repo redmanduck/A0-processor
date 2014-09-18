@@ -28,12 +28,36 @@ module control_unit (
   assign cuif.MemRead = (cuif.opcode == LW || cuif.opcode == LUI ? 1 : 0);
 
   assign cuif.iREN = (cuif.opcode != HALT);
+  //use dREN and dWEN as request signal
   assign cuif.dREN = cuif.MemToReg;
   assign cuif.dWEN = cuif.MemWr;
   //maybe refactorable?
   assign cuif.RegDst = (cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1); //RTYPE
-  assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : cuif.immediate[15]); //SIGN of immediate?? or immediate26
+//  assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : cuif.immediate[15]); //SIGN of immediate?? or immediate26
+
+  always_comb begin : EXTOP
+    casez(cuif.opcode)
+      ORI: cuif.ExtOp = 0;
+      default: cuif.ExtOp = cuif.immediate[15];
+    endcase
+  end
+
+
   //assign cuif.LUIOP
+
+//  assign cuif.halt = (cuif.opcode == HALT);
+  //if uncomment below, halt signal become 0 ,
+  //everythings BREAK!!
+
+
+  always_comb begin : HALTER
+    casez(cuif.opcode)
+      HALT: cuif.halt = 1;
+      default: cuif.halt = 0;
+    endcase
+  end
+
+ //TODO: latch the halt
 
   always_comb begin : PC_CONTROLS
     cuif.Jump = 1'b0; //for what?
