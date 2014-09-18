@@ -12,16 +12,14 @@ interface ru_cu_if;
 
   import cpu_types_pkg::*;
 
-  //from control unit to request unit
-  logic load_word_en; //assert this to request
-  logic store_word_en; //assert this to request
-
-  //from request unit to cache
+  logic imemREN, dmemREN, dmemWEN;
   logic dhit, ihit;
 
+  logic ctr_iREN, ctr_dWEN, ctr_dREN;
+
   modport ru (
-     input load_word_en, store_word_en,
-     output dhit, ihit
+     output imemREN, dmemREN, dmemWEN,
+     input dhit, ihit, ctr_iREN, ctr_dWEN, ctr_dREN
   );
 
 endinterface

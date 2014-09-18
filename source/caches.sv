@@ -52,7 +52,6 @@ module caches (
   assign dcif.imemload = (ccif.iwait[CPUID]) ? instr : ccif.iload[CPUID];
   assign dcif.dmemload = ccif.dload[CPUID];
 
-
   assign ccif.iREN[CPUID] = dcif.imemREN;
   assign ccif.dREN[CPUID] = dcif.dmemREN;
   assign ccif.dWEN[CPUID] = dcif.dmemWEN;

@@ -5,6 +5,7 @@
 `include "control_unit_if.vh"
 `include "cpu_types_pkg.vh"
 
+//TODO: remove nRST and CLK from control unit
 module control_unit (
    input CLK, nRST,
    control_unit_if.control cuif
@@ -25,18 +26,22 @@ module control_unit (
 
   assign cuif.MemWr = (cuif.opcode == SW ? 1 : 0);
   assign cuif.MemRead = (cuif.opcode == LW || cuif.opcode == LUI ? 1 : 0);
-  assign cuif.iREN = 1'b1;
-  assign cuif.RegDst = (cuif.opcode == LW || cuif.opcode == ORI ? 0 : 1); //RTYPE
+
+  assign cuif.iREN = (cuif.opcode != HALT);
+  assign cuif.dREN = cuif.MemToReg;
+  assign cuif.dWEN = cuif.MemWr;
+  //maybe refactorable?
+  assign cuif.RegDst = (cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1); //RTYPE
   assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : cuif.immediate[15]); //SIGN of immediate?? or immediate26
   //assign cuif.LUIOP
 
   always_comb begin : PC_CONTROLS
-    cuif.Jump = 1'b0;
+    cuif.Jump = 1'b0; //for what?
     if(cuif.opcode == JR) begin
-       cuif.PCSrc = 0;
+       cuif.PCSrc = 0; //read Rs
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == J || cuif.opcode == JAL) begin
-       cuif.PCSrc = 1;
+       cuif.PCSrc = 1; //where does Link occur
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == BEQ && cuif.alu_zf || cuif.opcode == BNE && !cuif.alu_zf) begin
        cuif.PCSrc = 2;

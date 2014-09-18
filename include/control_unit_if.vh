@@ -27,10 +27,10 @@ interface control_unit_if;
   logic ALUSrc; //select where ALU operand comes from
   logic MemRead;
   logic ALUSrc2; //second level mux selector to select operand from SHAMT
-  logic Jump;
+  logic Jump; //dont even know why thats there
   modport control (
     input instruction, alu_zf,
-    output opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, MemToReg, RegWr,
+    output opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, dWEN, dREN, MemToReg, RegWr,
 MemWr, Jump, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, pc_en
   );
 

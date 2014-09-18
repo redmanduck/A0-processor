@@ -7,44 +7,50 @@
   and its next pc logic
 
 */
-`include "control_unit_if.vh"
+`include "pc_if.vh"
 `include "cpu_types_pkg.vh"
-`include "register_file_if.vh"
+
 module program_counter (
    input CLK, nRST,
-   control_unit_if.control cuif,
-   register_file_if.rf rfif,
-   input ihit, dhit
+   pc_if.pc pcif
 );
 
    //TODO: make interface for pc
    import cpu_types_pkg::*;
-   parameter PC_INIT = 0;
-
    word_t PC_next;
    word_t PC;
+   word_t pc_4;
 
-   //TODO: Increase on ihit: otherwise
-   //TODO: Increase on dhit: ctr_dWEN | ctr_dREN
+   assign pc_4 = PC + 4;
+
+   parameter PC_INIT = 0;
+
+   assign pcif.imemaddr = PC;
+
+   //TODO: ----------- Increase on ihit: otherwise
+   //TODO: ----------- Increase on dhit: ctr_dWEN | ctr_dREN
+
    always_comb begin : PC_ns_logic
-      if(!cuif.pc_en) begin
+      if(!pcif.pc_en) begin
        PC_next = PC;
       end else begin
-        casez (cuif.PCSrc)
-            0: begin
-               //JR
-               PC_next = rfif.rdat1; // (JR) Let $rs go to rsel1
-            end
-            1: begin
-               //J or JAL //TODO: how do i impletement JAL
-               PC_next = cuif.immediate26;
-            end
-            2: begin
-               //BEQ/bne
-               PC_next = PC + cuif.immediate26;
-            end
-            default: PC_next = PC + 4;
-        endcase
+        PC_next = PC + 4;
+        casez (pcif.PCSrc)
+              0: begin
+                 //JR
+                 PC_next = pcif.rdat1; // (JR) Let $rs go to rsel1
+              end
+              1: begin
+                 //J or JAL
+                 //TODO: put in $31 for JAL
+                 PC_next = { pc_4[31:28] , pcif.immediate26, 2'b0 };
+              end
+              2: begin
+                 //BEQ/BNE
+                 PC_next = (PC + 4) + (pcif.immediate26 << 2);
+              end
+              default: PC_next = PC + 4;
+          endcase
       end
    end
 

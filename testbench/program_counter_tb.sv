@@ -1,5 +1,6 @@
 `include "control_unit_if.vh"
 `include "register_file_if.vh"
+`include "pc_if.vh"
 `include "cpu_ram_if.vh"
 `include "cpu_types_pkg.vh"
 
@@ -10,6 +11,7 @@ import cpu_types_pkg::*;
 module program_counter_tb;
   register_file_if rfif();
   control_unit_if cuif();
+  pc_if pcif();
 
   logic CLK = 0;
   logic nRST, ihit, dhit;
@@ -17,8 +19,15 @@ module program_counter_tb;
   parameter ADDR_MAX = 40;
 
   register_file RFDUT(CLK, nRST, rfif);
-  program_counter DUT(CLK, nRST, cuif, rfif, ihit, dhit);
+  program_counter DUT(CLK, nRST, pcif);
   control_unit CUDUT(CLK, nRST, cuif);
+
+  assign pcif.ihit = ihit;
+  assign pcif.dhit = dhit;
+  assign pcif.immediate26 = cuif.immediate26;
+  assign pcif.rdat1 = rfif.rdat1;
+  assign pcif.pc_en = cuif.pc_en;
+  assign pcif.PCSrc =  cuif.PCSrc;
 
   always #(PERIOD/2) CLK++;
 
