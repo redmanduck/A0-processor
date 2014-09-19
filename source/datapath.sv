@@ -58,8 +58,16 @@ module datapath (
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = cuif.RegWr;
   assign rfif.wdat = (cuif.MemToReg ? dpif.dmemload : alu_output);
-  assign rfif.wsel = (cuif.RegDst ? cuif.rd : cuif.rt  );
 
+  assign rfif.wsel = (cuif.RegDst ? cuif.rd : cuif.rt  );
+  /*always_comb begin : MUX_RGDST
+    casez (cuif.RegDst)
+      1: rfif.wsel = cuif.rd;
+      0: rfif.wsel = cuif.rt;
+      2: rfif.wsel = 5'd31;
+    endcase
+  end
+*/
   assign rqif.dhit = dpif.dhit;
   assign rqif.ihit = dpif.ihit;
   assign rqif.ctr_iREN = cuif.iREN;
@@ -84,19 +92,21 @@ module datapath (
 
   assign alu_op = cuif.ALUctr;
   assign alu_a = rfif.rdat1;
-//  assign alu_b = 0; //(!cuif.ALUSrc ? rfif.rdat2 : (cuif.ALUSrc2 ? cuif.shamt : ( cuif.ExtOp ? $signed(cuif.immediate) : {16'b0, cuif.immediate} ) ));  //TODO: double check ALUSrc2 mux input
 
-   always_comb begin : MUX_ALUB
-       if(!cuif.ALUSrc) begin
+  always_comb begin : MUX_ALU_B
+       if(cuif.ALUSrc == 0) begin
           alu_b = rfif.rdat2;
-       end else if(cuif.ALUSrc2) begin
+       end else if(cuif.ALUSrc == 1 && cuif.ALUSrc2) begin
           alu_b = cuif.shamt;
+       end else if(cuif.ALUSrc == 2) begin
+          alu_b = {cuif.immediate, 16'b0};
        end else if(cuif.ExtOp) begin
           alu_b = $signed(cuif.immediate);
-       end else begin //TODO: switch based on ExtOp
+       end else begin
           alu_b = cuif.immediate;
        end
    end
+
 
 /*  always_comb begin : MUX_WRITESRC
     if(cuif.MemToReg) begin
@@ -108,6 +118,6 @@ module datapath (
     end
   end
 */
-  assign dpif.halt = cuif.halt; //TODO: double check
+  assign dpif.halt = cuif.halt; //double checked
 
 endmodule

@@ -26,15 +26,15 @@ module program_counter_tb;
   assign pcif.dhit = dhit;
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = cuif.pc_en;
+//  assign pcif.pc_en = cuif.pc_en;
   assign pcif.PCSrc =  cuif.PCSrc;
 
   always #(PERIOD/2) CLK++;
 
   initial begin
-   cuif.pc_en = 0;
+  // cuif.pc_en = 0;
    #(PERIOD);
-   cuif.pc_en = 1;
+ //  cuif.pc_en = 1;
    cuif.instruction = 32'b0;
    ihit = 0;
    dhit = 0;

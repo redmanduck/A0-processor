@@ -8,12 +8,16 @@ import cpu_types_pkg::*;
 module datapath_tb;
   logic CLK = 0;
   logic nRST;
+  logic ihit = 0;
+
   parameter PERIOD = 10;
   always #(PERIOD/2) CLK++;
 
   datapath_cache_if dpif();
   datapath DUT(CLK, nRST, dpif);
 
+  always #(PERIOD) ihit++;
+  assign dpif.ihit = ihit;
   logic [4:0] rs, rt, rd;
   logic [15:0] imm16;
 
@@ -51,11 +55,11 @@ module datapath_tb;
 
    #(PERIOD*2);
     rs = 9;
-    rt = 1;
-    rd = 8;
+    rt = 9;
+    rd = 0;
     imm16 = 0; //dont care
     #(PERIOD*10);
-     dpif.imemload = {RTYPE, rs, rt, rd, 5'h0, SUB};
+     dpif.imemload = {SW, rs, rt, imm16};
 
     #(PERIOD*10);
     $finish;

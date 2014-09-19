@@ -27,8 +27,10 @@ module program_counter (
 
    assign pcif.imemaddr = PC;
 
-   //TODO: ----------- Increase on ihit: otherwise
-   //TODO: ----------- Increase on dhit: ctr_dWEN | ctr_dREN
+   //Resolved: ----------- Increase on ihit: otherwise
+   //Resolved: ----------- Increase on dhit: ctr_dWEN | ctr_dREN
+
+   //TODO: move all these outside
 
    always_comb begin : PC_ns_logic
       if(!pcif.pc_en) begin
@@ -42,7 +44,7 @@ module program_counter (
               end
               1: begin
                  //J or JAL
-                 //TODO: put in $31 for JAL
+                 //Resolved: put in $31 for JAL
                  PC_next = { pc_4[31:28] , pcif.immediate26, 2'b0 };
               end
               2: begin

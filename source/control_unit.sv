@@ -31,9 +31,18 @@ module control_unit (
   //use dREN and dWEN as request signal
   assign cuif.dREN = cuif.MemToReg;
   assign cuif.dWEN = cuif.MemWr;
-  //maybe refactorable?
-  assign cuif.RegDst = (cuif.opcode == XORI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1); //RTYPE
-//  assign cuif.ExtOp = (cuif.opcode == ORI ? 0 : cuif.immediate[15]); //SIGN of immediate?? or immediate26
+
+
+/*
+  assign cuif.RegDst = (cuif.opcode == XORI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1 ); //RTYPE
+*/
+ always_comb begin : REGDST
+    casez(cuif.opcode)
+      XORI, LW, ORI, ADDIU, ANDI, LUI, LW, SLTI, SLTIU: cuif.RegDst = 2'b00;
+      JAL: cuif.RegDst = 2'b10;
+      default: cuif.RegDst = 2'b01;
+    endcase
+ end
 
   always_comb begin : EXTOP
     casez(cuif.opcode)
@@ -44,13 +53,6 @@ module control_unit (
     endcase
   end
 
-
-  //assign cuif.LUIOP
-
-//  assign cuif.halt = (cuif.opcode == HALT);
-  //if uncomment below, halt signal become 0 ,
-  //everythings BREAK!!
-
   always_ff @ (posedge CLK, negedge nRST) begin
      if(!nRST) begin
        cuif.halt = 0;
@@ -60,16 +62,6 @@ module control_unit (
        cuif.halt = 0;
      end
   end
-/*
- always_comb begin : HALTER
-    casez(cuif.opcode)
-      HALT: cuif.halt = 1;
-      default: cuif.halt = 0;
-    endcase
-  end
-*/
- //TODO: latch the halt
-
 
   always_comb begin : PC_CONTROLS
     cuif.Jump = 1'b0; //for what?
@@ -77,7 +69,7 @@ module control_unit (
        cuif.PCSrc = 0; //read Rs
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == J || cuif.opcode == JAL) begin
-       cuif.PCSrc = 1; //where does Link occur
+       cuif.PCSrc = 1; //Link for JAL occur above
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == BEQ && cuif.alu_zf || cuif.opcode == BNE && !cuif.alu_zf) begin
        cuif.PCSrc = 2;
@@ -110,7 +102,7 @@ module control_unit (
     if (cuif.opcode == RTYPE) begin
       //do RTYPE operations
       cuif.ALUSrc2 = 1'b0; //Doesnt matter if ALUSrc is 0
-      cuif.ALUSrc = 1'b0; //Register
+      cuif.ALUSrc = 2'b0; //Register
       cuif.ALUctr = ALU_ADD; //some useless default
       casez (cuif.funct)
         ADDU: cuif.ALUctr = ALU_ADD;
@@ -123,12 +115,12 @@ module control_unit (
         SLTU: cuif.ALUctr = ALU_SLTU;
         SLL:  begin
           cuif.ALUctr = ALU_SLL;
-          cuif.ALUSrc = 1'b1;
+          cuif.ALUSrc = 1;
           cuif.ALUSrc2 = 1'b1;
         end
         SRL:  begin
           cuif.ALUctr = ALU_SRL;
-          cuif.ALUSrc = 1'b1;
+          cuif.ALUSrc = 1;
           cuif.ALUSrc2 = 1'b1;
         end
         SUBU: cuif.ALUctr = ALU_SUB;
@@ -140,13 +132,16 @@ module control_unit (
       //I-TYPES
       cuif.ALUctr = ALU_ADD;
       cuif.ALUSrc2 = 1'b0; //Use Sign Extended Imm16
-      cuif.ALUSrc = 1'b1; //Sign Extended Imm16
+      cuif.ALUSrc = 1; //Sign Extended Imm16
       casez (cuif.opcode) // or funct?
         ANDI: cuif.ALUctr = ALU_AND;
         ADDIU: cuif.ALUctr = ALU_ADD;
         BEQ: cuif.ALUctr = ALU_SUB; // subtract and check zero
         BNE: cuif.ALUctr = ALU_SUB;
-        LUI: cuif.ALUctr = ALU_ADD; // or shift left?
+        LUI: begin
+          cuif.ALUSrc = 2;
+          cuif.ALUctr = ALU_ADD;
+        end
         LW: cuif.ALUctr = ALU_ADD;
         ORI: cuif.ALUctr = ALU_OR;
         SLTI: cuif.ALUctr = ALU_SLT;
