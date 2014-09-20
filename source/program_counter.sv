@@ -59,8 +59,10 @@ module program_counter (
    always_ff @ (posedge CLK, negedge nRST) begin : PC_update_logic
     if(!nRST) begin
       PC <= PC_INIT;
-    end else begin
+    end else if (pcif.pc_en) begin
       PC <= PC_next;
+    end else begin
+      PC <= PC;
     end
   end
 endmodule

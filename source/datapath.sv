@@ -57,17 +57,24 @@ module datapath (
   assign rfif.rsel1 = cuif.rs;
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = cuif.RegWr;
-  assign rfif.wdat = (cuif.MemToReg ? dpif.dmemload : alu_output);
 
-  assign rfif.wsel = (cuif.RegDst ? cuif.rd : cuif.rt  );
-  /*always_comb begin : MUX_RGDST
-    casez (cuif.RegDst)
-      1: rfif.wsel = cuif.rd;
-      0: rfif.wsel = cuif.rt;
-      2: rfif.wsel = 5'd31;
+  //assign rfif.wdat = (cuif.MemToReg ? dpif.dmemload : alu_output);
+  always_comb begin : RFIF_WRITE
+    casez (cuif.MemToReg)
+      1: rfif.wdat = dpif.dmemload;
+      2: rfif.wdat = dpif.imemaddr + 4;
+      default: rfif.wdat = alu_output;
     endcase
   end
-*/
+  //assign rfif.wsel = (cuif.RegDst ? cuif.rd : cuif.rt );
+  always_comb begin : MUX_RGDST
+    casez (cuif.RegDst)
+      1: rfif.wsel = cuif.rd;
+      2: rfif.wsel = 31;
+      default: rfif.wsel = cuif.rt;
+    endcase
+  end
+
   assign rqif.dhit = dpif.dhit;
   assign rqif.ihit = dpif.ihit;
   assign rqif.ctr_iREN = cuif.iREN;
@@ -79,11 +86,12 @@ module datapath (
   assign dpif.dmemstore = rfif.rdat2;
   assign dpif.dmemaddr = alu_output;
 
-  assign pcif.ihit = ihit;
-  assign pcif.dhit = dhit;
+  assign pcif.ihit = ihit; //not used
+  assign pcif.dhit = dhit; //not used
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = !cuif.halt & dpif.ihit;
+  assign pcif.pc_en = nRST & !cuif.halt & dpif.ihit;
+  //assign pcif.pc_en = (cuif.ihit ? (!cuif.halt) : (cuif.dWEN || cuif.dREN ? dpif.dhit : 0));
   assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
 
@@ -107,17 +115,6 @@ module datapath (
        end
    end
 
-
-/*  always_comb begin : MUX_WRITESRC
-    if(cuif.MemToReg) begin
-       //Write from reg
-       rfif.wdat = dpif.imemload;
-    end else begin
-       //Write from alu
-       rfif.wdat = alu_output;
-    end
-  end
-*/
   assign dpif.halt = cuif.halt; //double checked
 
 endmodule

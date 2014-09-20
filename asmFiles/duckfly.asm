@@ -11,7 +11,7 @@
 
   layegg:
   ori   $15,$zero, 0xDEA
-  jr $1
+  jr $31
 
   superduck:
   ori   $16, $zero, 0x900D

@@ -28,10 +28,9 @@ module control_unit (
   assign cuif.MemRead = (cuif.opcode == LW || cuif.opcode == LUI ? 1 : 0);
 
   assign cuif.iREN = (cuif.opcode != HALT);
-  //use dREN and dWEN as request signal
-  assign cuif.dREN = cuif.MemToReg;
+  //use dREN and dWEN as RAM arbiter request signal
+  assign cuif.dREN = (cuif.MemToReg == 2'b1 ? 1 : 0);
   assign cuif.dWEN = cuif.MemWr;
-
 
 /*
   assign cuif.RegDst = (cuif.opcode == XORI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1 ); //RTYPE
@@ -65,7 +64,7 @@ module control_unit (
 
   always_comb begin : PC_CONTROLS
     cuif.Jump = 1'b0; //for what?
-    if(cuif.opcode == JR) begin
+    if(cuif.opcode == RTYPE && cuif.funct == JR) begin
        cuif.PCSrc = 0; //read Rs
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == J || cuif.opcode == JAL) begin
@@ -81,8 +80,11 @@ module control_unit (
 
   always_comb begin : REGISTER_FILE_CONTROLS
     if(cuif.opcode == LW) begin
-      //always write to reg FROM Memory
+      //always write to reg FROM Data Memory
       cuif.MemToReg = 1;
+    end else if (cuif.opcode == JAL) begin
+      //write to reg FROM INSTR MEMORY
+      cuif.MemToReg = 2;
     end else begin
        //always write to reg FROM ALU
       cuif.MemToReg = 0;
@@ -90,7 +92,7 @@ module control_unit (
   end
 
   always_comb begin : REG_EN_CONTROLS
-    if((cuif.opcode == RTYPE && cuif.opcode != JR) || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == SLTI || cuif.opcode == SLTIU || cuif.opcode == SW || cuif.opcode == SW || cuif.opcode == XORI) begin
+    if((cuif.opcode == RTYPE && cuif.opcode != JR) || cuif.opcode == JAL || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == SLTI || cuif.opcode == SLTIU || cuif.opcode == SW || cuif.opcode == SW || cuif.opcode == XORI) begin
        cuif.RegWr = 1;
     end else begin
        //default, no write
