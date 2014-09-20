@@ -49,7 +49,7 @@ module program_counter (
               end
               2: begin
                  //BEQ/BNE
-                 PC_next = (PC + 4) + (pcif.immediate26 << 2);
+                 PC_next = (PC + 4) + (pcif.immediate << 2);
               end
               default: PC_next = PC + 4;
           endcase

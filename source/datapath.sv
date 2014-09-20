@@ -86,11 +86,12 @@ module datapath (
   assign dpif.dmemstore = rfif.rdat2;
   assign dpif.dmemaddr = alu_output;
 
-  assign pcif.ihit = ihit; //not used
+  assign pcif.ihit = ihit; //not used TODO:remove
   assign pcif.dhit = dhit; //not used
   assign pcif.immediate26 = cuif.immediate26;
+  assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = nRST & !cuif.halt & dpif.ihit;
+  assign pcif.pc_en = nRST & !cuif.halt & dpif.ihit & !dpif.dhit;
   //assign pcif.pc_en = (cuif.ihit ? (!cuif.halt) : (cuif.dWEN || cuif.dREN ? dpif.dhit : 0));
   assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;

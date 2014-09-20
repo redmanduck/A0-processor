@@ -17,7 +17,7 @@ interface control_unit_if;
   //request control signal
    logic alu_zf; //zero flag from alu
   //other standard magical signals
-  logic MemToReg; //write content of memory to Reg or write ALU output to reg
+  logic [1:0] MemToReg; //write content of memory to Reg or write ALU output to reg
   logic RegWr; //when you want to write to reg
   logic MemWr; //when you want to write to memory
   logic ExtOp; //zero extended or sign extended

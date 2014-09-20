@@ -138,8 +138,14 @@ module control_unit (
       casez (cuif.opcode) // or funct?
         ANDI: cuif.ALUctr = ALU_AND;
         ADDIU: cuif.ALUctr = ALU_ADD;
-        BEQ: cuif.ALUctr = ALU_SUB; // subtract and check zero
-        BNE: cuif.ALUctr = ALU_SUB;
+        BEQ: begin
+           cuif.ALUctr = ALU_SUB;
+           cuif.ALUSrc = 0;
+        end
+        BNE: begin
+          cuif.ALUctr = ALU_SUB;
+          cuif.ALUSrc = 0;
+        end
         LUI: begin
           cuif.ALUSrc = 2;
           cuif.ALUctr = ALU_ADD;
