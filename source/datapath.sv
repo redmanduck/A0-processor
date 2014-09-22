@@ -112,7 +112,7 @@ module datapath (
        end else if(cuif.ExtOp) begin
           alu_b = $signed(cuif.immediate);
        end else begin
-          alu_b = cuif.immediate;
+          alu_b = {16'h0000, cuif.immediate};
        end
    end
 

@@ -16,11 +16,11 @@ module control_unit (
   //technically imemload will connect to instr
 
   assign cuif.opcode = cuif.instruction[31:26];
-  assign cuif.rs = cuif.instruction[26:21];
-  assign cuif.rt = cuif.instruction[21:16];
-  assign cuif.rd = cuif.instruction[16:11];
-  assign cuif.shamt = cuif.instruction[11:6];
-  assign cuif.funct = cuif.instruction[6:0];
+  assign cuif.rs = cuif.instruction[25:21];
+  assign cuif.rt = cuif.instruction[20:16];
+  assign cuif.rd = cuif.instruction[15:11];
+  assign cuif.shamt = cuif.instruction[10:6];
+  assign cuif.funct = cuif.instruction[5:0];
   assign cuif.immediate = cuif.instruction[15:0];
   assign cuif.immediate26 = cuif.instruction[25:0];
 
