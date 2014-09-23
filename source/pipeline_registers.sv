@@ -40,6 +40,7 @@ module pipeline_ex_mem(
    word_t reg_instr; //this is rd OR rt
 
    always_ff @(posedge CLK, negedge nRST) begin
+     if (!nRST) begin
       WB_MemToReg <= '0;
       WB_RegWrite <= '0;
       M_Branch <= '0;
@@ -53,6 +54,7 @@ module pipeline_ex_mem(
       M_MemRead <= plif.M_MemRead_in;
       M_MemWrite <= plif.M_MemWrite_in;
       alu_zero <= plif.alu_zero_in;
+   end
    end
 
 endmodule
