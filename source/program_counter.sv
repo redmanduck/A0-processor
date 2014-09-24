@@ -26,7 +26,7 @@ module program_counter (
    parameter PC_INIT = 0;
 
    assign pcif.imemaddr = PC;
-
+   assign pcif.pc_plus_4 = pc_4;
    //Resolved: ----------- Increase on ihit: otherwise
    //Resolved: ----------- Increase on dhit: ctr_dWEN | ctr_dREN
 

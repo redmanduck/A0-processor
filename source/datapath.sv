@@ -12,6 +12,7 @@
 `include "register_file_if.vh"
 `include "ru_cu_if.vh"
 `include "pc_if.vh"
+`include "pipereg_if.vh"
 
 // alu op, mips op, and instruction type
 `include "cpu_types_pkg.vh"
@@ -23,12 +24,15 @@ module datapath (
   // import types
   import cpu_types_pkg::*;
   parameter PC_INIT = 0;
-  logic megatron;
-  assign megatron = CLK;
+
   control_unit_if cuif();
   register_file_if rfif();
   ru_cu_if rqif();
   pc_if pcif();
+  pipereg_if_id ifid();
+  pipereg_id_ex idex();
+  pipereg_ex_mem xmem();
+  pipereg_mem_wb mweb();
 
   //ALU logics
   aluop_t alu_op;
@@ -39,8 +43,10 @@ module datapath (
   word_t alu_output;
   logic alu_zf;
 
-  logic ihit;
-  logic dhit;
+  logic stall;
+
+  logic ihit; //not used
+  logic dhit; //not used
   //sub-blocks
   control_unit CU(CLK, nRST, cuif);
 
@@ -52,13 +58,17 @@ module datapath (
 
   request_unit RUCU(CLK, nRST, rqif);
 
+  pl_if_id PIPEREG_IFID(CLK, nRST, ifid);
+  pl_id_ex PIPEREG_IDEX(CLK, nRST, idex);
+  pl_ex_mem PIPEREG_XMEM(CLK, nRST, xmem);
+  pl_mem_wb PIPEREG_MWEB(CLK, nRST, mweb);
+
   //connect
 
   assign rfif.rsel1 = cuif.rs;
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = cuif.RegWr;
-
-  //assign rfif.wdat = (cuif.MemToReg ? dpif.dmemload : alu_output);
+  //TODO: remove this for pipeline
   always_comb begin : RFIF_WRITE
     casez (cuif.MemToReg)
       1: rfif.wdat = dpif.dmemload;
@@ -66,7 +76,7 @@ module datapath (
       default: rfif.wdat = alu_output;
     endcase
   end
-  //assign rfif.wsel = (cuif.RegDst ? cuif.rd : cuif.rt );
+
   always_comb begin : MUX_RGDST
     casez (cuif.RegDst)
       1: rfif.wsel = cuif.rd;
@@ -92,7 +102,7 @@ module datapath (
   assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
   assign pcif.pc_en = nRST & !cuif.halt & dpif.ihit & !dpif.dhit;
-  //assign pcif.pc_en = (cuif.ihit ? (!cuif.halt) : (cuif.dWEN || cuif.dREN ? dpif.dhit : 0));
+
   assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
 
@@ -117,5 +127,46 @@ module datapath (
    end
 
   assign dpif.halt = cuif.halt; //double checked
+
+  /*
+    PIPELINE motion control
+    -- make sure no instruction move forward in PIPELINE
+       when stall is asserted.
+    -- stall when there is a pending memory operation
+  */
+
+  assign stall = (dpif.dmemREN || dpif.dmemWEN) && (!dpif.dhit);
+  always_ff @(posedge CLK, negedge nRST) begin
+       ifid.WEN <= !stall;
+  end
+  always_ff @(posedge CLK, negedge nRST) begin
+       idex.WEN <= !stall;
+  end
+  always_ff @(posedge CLK, negedge nRST) begin
+       xmem.WEN <= !stall;
+  end
+  always_ff @(posedge CLK, negedge nRST) begin
+       mweb.WEN <= !stall;
+  end
+
+
+  /*
+    PIPELINE LATCHES connections
+  */
+
+  assign ifid.instruction_in = cuif.instruction;
+  assign ifid.next_address_in = pcif.pc_plus_4;
+
+  assign idex.next_address_in = pcif.pc_plus_4;
+  assign idex.WB_MemToReg_in = cuif.MemToReg;
+  assign idex.WB_RegWrite_in = cuif.RegWr;
+  assign idex.M_Branch_in = cuif.Branch; //TODO: TODO!!
+  assign idex.M_MemRead_in = cuif.MemRead;
+  assign idex.M_MemWrite_in = cuif.MemWr;
+  assign idex.M_RegDst_in = cuif.RegDst;
+  assign idex.EX_ALUSrc = cuif.ALUSrc;
+  assign idex.EX_ALUOp = cuif.ALUctr;
+  assign idex.EX_RegDst = cuif.RegDst;
+  assign idex.EX_ALUSrc2 = cuif.ALUSrc2;
 
 endmodule

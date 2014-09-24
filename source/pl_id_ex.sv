@@ -14,7 +14,8 @@ module pl_id_ex(
    logic M_Branch, M_MemRead, M_MemWrite;
 
    //EX control signals
-   logic EX_RegDst, EX_ALUOp, EX_ALUSrc;
+   logic [1:0] EX_RegDst, EX_ALUSrc, EX_ALUSrc2;
+   aluop_t EX_ALUOp;
 
    word_t next_address;
    word_t rdat1;
@@ -37,7 +38,9 @@ module pl_id_ex(
    assign idex.sign_ext32_out = sign_ext32;
    assign idex.rt_out = rt;
    assign idex.rd_out = rd;
+   assign idex.EX_ALUSrc2_out = EX_ALUSrc2;
 
+   //nothing to flush
    always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
          WB_MemToReg <= '0;
@@ -48,17 +51,13 @@ module pl_id_ex(
          EX_RegDst <= '0;
          EX_ALUOp <= '0;
          EX_ALUSrc <= '0;
+         EX_ALUSrc2 <= '0;
          next_address <= '0;
          rdat1 <= '0;
          rdat2 <= '0;
          sign_ext32 <= '0;
          rt <= '0;
          rd <= '0;
-      end else if(idex.flush == 1'b1) begin
-         //Flush (inject NOP)
-         WB_RegWrite <= '0;
-         M_MemWrite <= '0;
-         M_MemRead <= '0;
       end else if(idex.WEN == 1 && !idex.flush) begin
          WB_MemToReg <= idex.WB_MemToReg_in;
          WB_RegWrite <= idex.WB_RegWrite_in;
@@ -68,6 +67,7 @@ module pl_id_ex(
          EX_RegDst <= idex.EX_RegDst_in;
          EX_ALUOp <= idex.EX_ALUOp_in;
          EX_ALUSrc <= idex.EX_ALUSrc_in;
+         EX_ALUSrc2 <= idex.EX_ALUSrc2_in;
          next_address <= idex.next_address_in;
          rdat1 <= idex.rdat1_in;
          rdat2 <= idex.rdat2_in;

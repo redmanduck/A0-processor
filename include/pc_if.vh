@@ -18,10 +18,11 @@ interface pc_if;
   logic [25:0] immediate26;
   logic [15:0] immediate;
   word_t imemaddr;
+  word_t pc_plus_4;
 
   modport pc(
     input ihit, dhit, immediate, immediate26, rdat1, pc_en, PCSrc,
-    output imemaddr
+    output imemaddr, pc_plus_4
   );
 
 endinterface
