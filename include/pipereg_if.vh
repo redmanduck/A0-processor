@@ -66,10 +66,10 @@ interface pipereg_mem_wb;
   logic WEN, flush, WB_MemToReg_in, WB_MemToReg_out;
   word_t dmemload_in, dmemload_out, dmemaddr_in, dmemaddr_out;
   logic WB_RegWrite_in, WB_RegWrite_out;
-
+  word_t alu_result_out;
   modport mwb(
     input WEN, flush, dmemload_in, dmemaddr_in, WB_RegWrite_in, WB_MemToReg_in,
-    output WB_RegWrite_out, WB_MemToReg_out, dmemload_out, dmemaddr_out
+    output WB_RegWrite_out, alu_result_out, WB_MemToReg_out, dmemload_out, dmemaddr_out
   );
 endinterface
 

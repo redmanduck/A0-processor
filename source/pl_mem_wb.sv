@@ -10,13 +10,15 @@ module pl_mem_wb(
 
    word_t dmemload;
    word_t dmemaddr;
+
    logic WB_RegWrite;
    logic WB_MemToReg;
 
    assign mwb.WB_RegWrite_out = WB_RegWrite;
    assign mwb.WB_MemToReg_out = WB_MemToReg;
    assign mwb.dmemload_out = dmemload;
-   assign mwb.dmemaddr_out = dmemload;
+   assign mwb.dmemaddr_out = dmemaddr;
+   assign mwb.alu_result_out = dmemaddr;
 
    always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin

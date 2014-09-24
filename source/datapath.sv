@@ -5,7 +5,7 @@
   datapath contains register file, control, hazard,
   muxes, and glue logic for processor
 */
-
+//TODO: Should we Stall when JAL, or store the PC in pipeline latch
 // data path interface
 `include "datapath_cache_if.vh"
 `include "control_unit_if.vh"
@@ -63,25 +63,27 @@ module datapath (
   pl_ex_mem PIPEREG_XMEM(CLK, nRST, xmem);
   pl_mem_wb PIPEREG_MWEB(CLK, nRST, mweb);
 
-  //connect
-
+  //TODO: not verified
   assign rfif.rsel1 = cuif.rs;
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = cuif.RegWr;
-  //TODO: remove this for pipeline
+
+
+  //PIPELINED rfif wdat
   always_comb begin : RFIF_WRITE
-    casez (cuif.MemToReg)
-      1: rfif.wdat = dpif.dmemload;
-      2: rfif.wdat = dpif.imemaddr + 4;
-      default: rfif.wdat = alu_output;
+    casez (mweb.MemToReg_out)
+      1: rfif.wdat = mweb.dmemload_out;
+      2: rfif.wdat = pcif.imemaddr + 4;//TODO: not implemetned yet, shd be mweb
+      default: rfif.wdat = mweb.alu_result_out;
     endcase
   end
 
+  //PIPELINED
   always_comb begin : MUX_RGDST
-    casez (cuif.RegDst)
-      1: rfif.wsel = cuif.rd;
+    casez (idex.RegDst_out)
+      1: rfif.wsel = idex.rd_out;
       2: rfif.wsel = 31;
-      default: rfif.wsel = cuif.rt;
+      default: rfif.wsel = idex.rt_out;
     endcase
   end
 
@@ -160,7 +162,7 @@ module datapath (
   assign idex.next_address_in = pcif.pc_plus_4;
   assign idex.WB_MemToReg_in = cuif.MemToReg;
   assign idex.WB_RegWrite_in = cuif.RegWr;
-  assign idex.M_Branch_in = cuif.Branch; //TODO: TODO!!
+  assign idex.M_Branch_in = cuif.Branch;     //TODO: Not yet Implemented
   assign idex.M_MemRead_in = cuif.MemRead;
   assign idex.M_MemWrite_in = cuif.MemWr;
   assign idex.M_RegDst_in = cuif.RegDst;
@@ -168,5 +170,13 @@ module datapath (
   assign idex.EX_ALUOp = cuif.ALUctr;
   assign idex.EX_RegDst = cuif.RegDst;
   assign idex.EX_ALUSrc2 = cuif.ALUSrc2;
+
+  assign xmem.WB_MemToReg_in = idex.WB_MemToReg_out;
+  assign xmem.WB_RegWrite_in = idex.WB_RegWrite_out;
+  assign xmem.M_MemRead_in = idex.M_MemRead_out;
+  assign xmem.M_MemRead_in = idex.M_MemRead_out;
+
+  assign mweb.WB_RegWrite_in = xmem.WB_RegWrite_out;
+  assign mweb.WB_MemToReg_in = xmem.WB_MemToReg_out;
 
 endmodule
