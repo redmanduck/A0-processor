@@ -27,7 +27,7 @@ module datapath (
 
   control_unit_if cuif();
   register_file_if rfif();
-  ru_cu_if rqif();
+//  ru_cu_if rqif();
   pc_if pcif();
   pipereg_if_id ifid();
   pipereg_id_ex idex();
@@ -56,47 +56,67 @@ module datapath (
 
   alu ALU(.ALUOP(alu_op), .Port_A(alu_a), .Port_B(alu_b), .negative(alu_nf), .overflow(alu_vf), .output_port(alu_output), .zero(alu_zf));
 
-  request_unit RUCU(CLK, nRST, rqif);
+  assign xmem.alu_output_in = alu_output;
 
-  pl_if_id PIPEREG_IFID(CLK, nRST, ifid);
-  pl_id_ex PIPEREG_IDEX(CLK, nRST, idex);
-  pl_ex_mem PIPEREG_XMEM(CLK, nRST, xmem);
-  pl_mem_wb PIPEREG_MWEB(CLK, nRST, mweb);
+//  request_unit RUCU(CLK, nRST, rqif);
 
-  //TODO: not verified
+  pl_if_id IFID(CLK, nRST, ifid);
+  pl_id_ex IDEX(CLK, nRST, idex);
+  pl_ex_mem EXMEM(CLK, nRST, xmem);
+  pl_mem_wb MEMWB(CLK, nRST, mweb);
+
+  //PIPELINED
   assign rfif.rsel1 = cuif.rs;
   assign rfif.rsel2 = cuif.rt;
-  assign rfif.WEN = cuif.RegWr;
-
+  assign rfif.WEN = mweb.WB_RegWrite_out;
+  
+  //TODO: FLUSH
+  assign idex.flush = 0;
+  assign ifid.flush = 0;
+  assign xmem.flush =0;
+  assign mweb.flush = 0;
 
   //PIPELINED rfif wdat
   always_comb begin : RFIF_WRITE
-    casez (mweb.MemToReg_out)
+    casez (mweb.WB_MemToReg_out)
       1: rfif.wdat = mweb.dmemload_out;
       2: rfif.wdat = pcif.imemaddr + 4;//TODO: not implemetned yet, shd be mweb
-      default: rfif.wdat = mweb.alu_result_out;
+      default: rfif.wdat = mweb.alu_output_out;
     endcase
   end
 
-  //PIPELINED
   always_comb begin : MUX_RGDST
-    casez (idex.RegDst_out)
-      1: rfif.wsel = idex.rd_out;
-      2: rfif.wsel = 31;
-      default: rfif.wsel = idex.rt_out;
+    casez (idex.EX_RegDst_out)
+      1: xmem.reg_instr_in = idex.rd_out;
+      2: xmem.reg_instr_in = 31; //JAL
+      default: xmem.reg_instr_in = idex.rt_out;
     endcase
   end
 
-  assign rqif.dhit = dpif.dhit;
+/*  assign rqif.dhit = dpif.dhit;
   assign rqif.ihit = dpif.ihit;
   assign rqif.ctr_iREN = cuif.iREN;
   assign rqif.ctr_dWEN = cuif.dWEN;
-  assign rqif.ctr_dREN = cuif.dREN;
-  assign dpif.imemREN = rqif.imemREN;
-  assign dpif.dmemREN = rqif.dmemREN;
-  assign dpif.dmemWEN = rqif.dmemWEN;
-  assign dpif.dmemstore = rfif.rdat2;
-  assign dpif.dmemaddr = alu_output;
+  assign rqif.ctr_dREN = cuif.dREN;*/
+//  assign
+
+
+  //TODO: ASK ERIC
+  always_ff @ (posedge CLK, negedge nRST) begin
+    if(!nRST) begin
+       dpif.dmemREN<= 0;
+       dpif.dmemREN <= 0;
+    end else begin
+       dpif.dmemREN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemRead_out : 0);
+       dpif.dmemWEN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemWrite_out : 0);
+    end
+  end
+
+  assign dpif.imemREN = 1'b1;//rqif.imemREN;
+  // assign dpif.dmemREN = xmem.M_MemRead_out;//rqif.dmemREN;
+  // assign dpif.dmemWEN = xmem.M_MemWrite_out;//rqif.dmemWEN;
+  assign dpif.dmemstore = xmem.regfile_rdat2_out;
+  assign dpif.dmemaddr = xmem.alu_output_out;
 
   assign pcif.ihit = ihit; //not used TODO:remove
   assign pcif.dhit = dhit; //not used
@@ -111,23 +131,57 @@ module datapath (
   assign cuif.instruction = dpif.imemload;
   assign cuif.alu_zf = alu_zf;
 
-  assign alu_op = cuif.ALUctr;
-  assign alu_a = rfif.rdat1;
+  //PIPELINED
+  assign alu_op = idex.EX_ALUOp_out;//cuif.ALUctr;
+  assign alu_a = idex.rdat1_out;//rfif.rdat1;
+
+  //PIPELINED
+/*
+  always_comb begin : MUX_ALU_B
+       if(idex.EX_ALUSrc_out == 0) begin
+          alu_b = idex.rdat2_out;
+       end else if(idex.EX_ALUSrc_out == 1 && cuif.ALUSrc2) begin
+          alu_b = {27'b0, idex.shamt_out};
+       end else if(idex.EX_ALUSrc_out == 2) begin
+          alu_b = {idex.immediate_out, 16'b0};
+       end
+
+   end
+*/
+  word_t shamt_extended;
+
+  always_comb begin : MUX_ALU_B2
+      if(idex.EX_ALUSrc2_out == 0) begin
+          shamt_extended = idex.immediate_out;
+      end else begin
+          shamt_extended = {27'b0, idex.shamt_out};
+      end
+  end
 
   always_comb begin : MUX_ALU_B
-       if(cuif.ALUSrc == 0) begin
-          alu_b = rfif.rdat2;
-       end else if(cuif.ALUSrc == 1 && cuif.ALUSrc2) begin
-          alu_b = cuif.shamt;
-       end else if(cuif.ALUSrc == 2) begin
-          alu_b = {cuif.immediate, 16'b0};
-       end else if(cuif.ExtOp) begin
-          alu_b = $signed(cuif.immediate);
+       if(idex.EX_ALUSrc_out == 0) begin
+          alu_b = idex.rdat2_out;
        end else begin
-          alu_b = {16'h0000, cuif.immediate};
+          alu_b = shamt_extended;
        end
-   end
+  end
 
+
+ //PIPELINED (ID)
+ always_comb begin : INSTR
+       if(cuif.ExtOp) begin //sign Extended
+          idex.immediate_in = $signed(cuif.immediate);
+       end else begin //zero Extended
+          idex.immediate_in = {16'h0000, cuif.immediate};
+       end
+ end
+
+  //PIPELINED Data memory  (MEM stage)
+  //Dcache
+//  always_comb
+  assign idex.immediate26_in = cuif.immediate26;
+  assign idex.rt_in = cuif.rt;
+  assign idex.rd_in = cuif.rd;
   assign dpif.halt = cuif.halt; //double checked
 
   /*
@@ -137,46 +191,75 @@ module datapath (
     -- stall when there is a pending memory operation
   */
 
-  assign stall = (dpif.dmemREN || dpif.dmemWEN) && (!dpif.dhit);
+  assign stall = (dpif.dmemREN || dpif.dmemWEN ? (!dpif.dhit) : 0);
   always_ff @(posedge CLK, negedge nRST) begin
-       ifid.WEN <= !stall;
+      if(!nRST) begin
+           ifid.WEN <= 0;
+      end else begin
+           ifid.WEN <= !stall;
+      end
   end
   always_ff @(posedge CLK, negedge nRST) begin
-       idex.WEN <= !stall;
+       if(!nRST) begin
+           idex.WEN <= 0;
+      end else begin
+           idex.WEN <= !stall;
+      end
   end
   always_ff @(posedge CLK, negedge nRST) begin
-       xmem.WEN <= !stall;
+       if(!nRST) begin
+           xmem.WEN <= 0;
+      end else begin
+           xmem.WEN <= !stall;
+      end
   end
   always_ff @(posedge CLK, negedge nRST) begin
-       mweb.WEN <= !stall;
+      if(!nRST) begin
+           mweb.WEN <= 0;
+      end else begin
+           mweb.WEN <= !stall;
+      end
   end
+
+  
 
 
   /*
     PIPELINE LATCHES connections
   */
 
-  assign ifid.instruction_in = cuif.instruction;
+  assign ifid.instruction_in = dpif.imemload;
   assign ifid.next_address_in = pcif.pc_plus_4;
 
+//  assign idex.rs_in 
+  assign idex.shamt_in = cuif.shamt;
   assign idex.next_address_in = pcif.pc_plus_4;
   assign idex.WB_MemToReg_in = cuif.MemToReg;
   assign idex.WB_RegWrite_in = cuif.RegWr;
   assign idex.M_Branch_in = cuif.Branch;     //TODO: Not yet Implemented
   assign idex.M_MemRead_in = cuif.MemRead;
   assign idex.M_MemWrite_in = cuif.MemWr;
-  assign idex.M_RegDst_in = cuif.RegDst;
-  assign idex.EX_ALUSrc = cuif.ALUSrc;
-  assign idex.EX_ALUOp = cuif.ALUctr;
-  assign idex.EX_RegDst = cuif.RegDst;
-  assign idex.EX_ALUSrc2 = cuif.ALUSrc2;
+  assign idex.EX_RegDst_in = cuif.RegDst;
+  assign idex.EX_ALUSrc_in = cuif.ALUSrc;
+  assign idex.EX_ALUOp_in = cuif.ALUctr;
+  assign idex.EX_ALUSrc2_in = cuif.ALUSrc2;
+  assign idex.rdat1_in = rfif.rdat1;
+  assign idex.rdat2_in = rfif.rdat2;
+
 
   assign xmem.WB_MemToReg_in = idex.WB_MemToReg_out;
   assign xmem.WB_RegWrite_in = idex.WB_RegWrite_out;
   assign xmem.M_MemRead_in = idex.M_MemRead_out;
-  assign xmem.M_MemRead_in = idex.M_MemRead_out;
+  assign xmem.M_MemWrite_in = idex.M_MemWrite_out;
+  assign xmem.regfile_rdat2_in = idex.rdat2_out;
 
   assign mweb.WB_RegWrite_in = xmem.WB_RegWrite_out;
   assign mweb.WB_MemToReg_in = xmem.WB_MemToReg_out;
+  assign mweb.dmemload_in = dpif.dmemload;
+  assign mweb.alu_output_in = xmem.alu_output_out;
+
+  assign mweb.reg_instr_in = xmem.reg_instr_out;
+  assign rfif.wsel = mweb.reg_instr_out;
+
 
 endmodule

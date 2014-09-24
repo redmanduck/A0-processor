@@ -9,22 +9,28 @@ module pl_mem_wb(
 );
 
    word_t dmemload;
+   word_t alu_output;
    word_t dmemaddr;
 
    logic WB_RegWrite;
    logic WB_MemToReg;
 
+   logic [4:0] reg_instr;
+
    assign mwb.WB_RegWrite_out = WB_RegWrite;
    assign mwb.WB_MemToReg_out = WB_MemToReg;
    assign mwb.dmemload_out = dmemload;
    assign mwb.dmemaddr_out = dmemaddr;
-   assign mwb.alu_result_out = dmemaddr;
+   assign mwb.alu_output_out = alu_output;
+   assign mwb.reg_instr_out = reg_instr;
 
    always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
          dmemload <= '0;
          dmemaddr <= '0;
          WB_RegWrite <= '0;
+         alu_output <= '0;
+         reg_instr <= '0;
          WB_MemToReg <= '0;
       end else if(mwb.flush == 1'b1) begin
          WB_RegWrite <= 0;
@@ -33,6 +39,8 @@ module pl_mem_wb(
          dmemaddr <= mwb.dmemaddr_in;
          WB_RegWrite <= mwb.WB_RegWrite_in;
          WB_MemToReg <= mwb.WB_MemToReg_in;
+         alu_output <= mwb.alu_output_in;
+         reg_instr <= mwb.reg_instr_in;
       end
     end
 
