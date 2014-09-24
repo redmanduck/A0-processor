@@ -9,8 +9,9 @@ interface pipereg_id_ex;
 
    logic WEN; //do WEN
    logic flush; //do NOP
-   logic WB_MemToReg_in, WB_RegWrite_in, M_Branch_in, M_MemRead_in, M_MemWrite_in, EX_RegDst_in, EX_ALUSrc_in;
-   logic WB_MemToReg_out, WB_RegWrite_out, M_Branch_out, M_MemRead_out, M_MemWrite_out, EX_RegDst_out, EX_ALUSrc_out;
+   logic WB_MemToReg_in, WB_RegWrite_in, M_Branch_in, M_MemRead_in, M_MemWrite_in, EX_RegDst_in;
+   logic [1:0] EX_ALUSrc_in, EX_ALUSrc_out;
+   logic WB_MemToReg_out, WB_RegWrite_out, M_Branch_out, M_MemRead_out, M_MemWrite_out, EX_RegDst_out;
 
    aluop_t EX_ALUOp_in, EX_ALUOp_out;
    word_t next_address_in, next_address_out;
@@ -25,8 +26,14 @@ interface pipereg_id_ex;
    word_t immediate_in, immediate_out; //extended immediate
 
   modport idex(
-     input WEN, flush, WB_MemToReg_in, immediate26_in,immediate_in, shamt_in, EX_ALUSrc2_in, WB_RegWrite_in, M_Branch_in, M_MemRead_in, M_MemWrite_in, EX_RegDst_in, EX_ALUOp_in, EX_ALUSrc_in, next_address_in, rdat1_in, rdat2_in, sign_ext32_in, rt_in, rd_in,
-     output WB_MemToReg_out, WB_RegWrite_out, immediate26_out,immediate_out, shamt_out, EX_ALUSrc2_out, M_Branch_out, M_MemRead_out, M_MemWrite_out, EX_RegDst_out, EX_ALUOp_out, EX_ALUSrc_out, next_address_out, rdat1_out, rdat2_out, sign_ext32_out, rt_out, rd_out
+     input WEN, flush, WB_MemToReg_in, immediate26_in,immediate_in, 
+     shamt_in, EX_ALUSrc2_in, WB_RegWrite_in, M_Branch_in, M_MemRead_in, 
+     M_MemWrite_in, EX_RegDst_in, EX_ALUOp_in, EX_ALUSrc_in, next_address_in, 
+     rdat1_in, rdat2_in, sign_ext32_in, rt_in, rd_in,
+     output WB_MemToReg_out, WB_RegWrite_out, immediate26_out,immediate_out, 
+     shamt_out, EX_ALUSrc2_out, M_Branch_out, M_MemRead_out, M_MemWrite_out, 
+     EX_RegDst_out, EX_ALUOp_out, EX_ALUSrc_out, next_address_out, rdat1_out, 
+     rdat2_out, sign_ext32_out, rt_out, rd_out
   );
 endinterface
 

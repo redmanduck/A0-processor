@@ -70,10 +70,10 @@ module datapath (
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = mweb.WB_RegWrite_out;
   
-  //TODO: FLUSH
+  //TODO: FLUSH , not sure how flush should work?
+  assign ifid.flush = dpif.dhit;
   assign idex.flush = 0;
-  assign ifid.flush = 0;
-  assign xmem.flush =0;
+  assign xmem.flush = 0;
   assign mweb.flush = 0;
 
   //PIPELINED rfif wdat
@@ -101,16 +101,22 @@ module datapath (
 //  assign
 
 
-  //TODO: ASK ERIC
-  always_ff @ (posedge CLK, negedge nRST) begin
-    if(!nRST) begin
-       dpif.dmemREN<= 0;
-       dpif.dmemREN <= 0;
-    end else begin
-       dpif.dmemREN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemRead_out : 0);
-       dpif.dmemWEN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemWrite_out : 0);
-    end
-  end
+  //TODO: ASK ERIC   -- we pasted this from rq unit
+  // always_ff @ (posedge CLK, negedge nRST) begin
+  //   if(!nRST) begin
+  //      dpif.dmemREN <= 0;
+  //      dpif.dmemREN <= 0;
+  //   end else begin
+  //      dpif.dmemREN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemRead_out : 0);
+  //      dpif.dmemWEN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemWrite_out : 0);
+  //   end
+  // end
+
+ // assign dpif.dmemREN = dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemRead_out : 0);
+ // assign dpif.dmemWEN = dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemWrite_out : 0);
+
+ assign dpif.dmemREN = xmem.M_MemRead_out;
+ assign dpif.dmemWEN = xmem.M_MemWrite_out;
 
   assign dpif.imemREN = 1'b1;//rqif.imemREN;
   // assign dpif.dmemREN = xmem.M_MemRead_out;//rqif.dmemREN;
@@ -128,7 +134,7 @@ module datapath (
   assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
 
-  assign cuif.instruction = dpif.imemload;
+  assign cuif.instruction = ifid.instruction_out;
   assign cuif.alu_zf = alu_zf;
 
   //PIPELINED
@@ -161,6 +167,8 @@ module datapath (
   always_comb begin : MUX_ALU_B
        if(idex.EX_ALUSrc_out == 0) begin
           alu_b = idex.rdat2_out;
+       end else if (idex.EX_ALUSrc_out == 2) begin
+          alu_b = {idex.immediate_out, 16'b0};
        end else begin
           alu_b = shamt_extended;
        end
@@ -237,8 +245,8 @@ module datapath (
   assign idex.WB_MemToReg_in = cuif.MemToReg;
   assign idex.WB_RegWrite_in = cuif.RegWr;
   assign idex.M_Branch_in = cuif.Branch;     //TODO: Not yet Implemented
-  assign idex.M_MemRead_in = cuif.MemRead;
-  assign idex.M_MemWrite_in = cuif.MemWr;
+  assign idex.M_MemRead_in = cuif.dREN;
+  assign idex.M_MemWrite_in = cuif.dWEN;
   assign idex.EX_RegDst_in = cuif.RegDst;
   assign idex.EX_ALUSrc_in = cuif.ALUSrc;
   assign idex.EX_ALUOp_in = cuif.ALUctr;

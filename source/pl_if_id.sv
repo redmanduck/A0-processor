@@ -13,10 +13,8 @@ module pl_if_id(
    assign ifid.next_address_out = next_address;
    assign ifid.instruction_out = instruction;
 
-   //There is nothing to flush in this pipeline latch
-
    always_ff @(posedge CLK, negedge nRST) begin
-     if (!nRST) begin
+     if (!nRST || ifid.flush) begin
          instruction <= '0;
          next_address <= '0;
       end else if (ifid.WEN == 1'b1) begin

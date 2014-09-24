@@ -28,7 +28,8 @@ module control_unit (
   assign cuif.MemRead = (cuif.opcode == LW || cuif.opcode == LUI ? 1 : 0);
 
   assign cuif.iREN = (cuif.opcode != HALT);
-  //use dREN and dWEN as RAM arbiter request signal
+
+  //use dREN and dWEN as RAM arbiter request signal to Cache (or RAM)
   assign cuif.dREN = (cuif.MemToReg == 2'b1 ? 1 : 0);
   assign cuif.dWEN = cuif.MemWr;
 
