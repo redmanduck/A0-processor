@@ -26,6 +26,7 @@ module pl_id_ex(
    logic [4:0] shamt;
    logic [25:0] immediate26;
    logic [15:0] immediate;
+   logic halt;
 
    assign idex.WB_MemToReg_out = WB_MemToReg;
    assign idex.WB_RegWrite_out = WB_RegWrite;
@@ -45,10 +46,11 @@ module pl_id_ex(
    assign idex.shamt_out = shamt;
    assign idex.immediate26_out = immediate26;
    assign idex.immediate_out = immediate;
+   assign idex.halt_out = halt;
 
    //nothing to flush
    always_ff @(posedge CLK, negedge nRST) begin
-      if(!nRST) begin
+      if(!nRST) begin //or flush
          WB_MemToReg <= '0;
          WB_RegWrite <= '0;
          M_Branch <= '0;
@@ -64,12 +66,14 @@ module pl_id_ex(
          rdat1 <= '0;
          rdat2 <= '0;
          sign_ext32 <= '0;
+         halt <= '0;
          rt <= '0;
          rd <= '0;
          shamt <= '0;
       end else if(idex.WEN == 1 && !idex.flush) begin
          WB_MemToReg <= idex.WB_MemToReg_in;
          WB_RegWrite <= idex.WB_RegWrite_in;
+         halt <= idex.halt_in;
          shamt <= idex.shamt_in;
          M_Branch <= idex.M_Branch_in;
          M_MemRead <= idex.M_MemRead_in;

@@ -18,7 +18,7 @@ module pl_ex_mem(
    word_t adder_result; //output from adder
    word_t regfile_rdat2; //register file's rdat2
    word_t reg_instr; //this is rd OR rt
-
+   logic halt;
    assign xmem.WB_MemToReg_out = WB_MemToReg;
    assign xmem.WB_RegWrite_out = WB_RegWrite;
    assign xmem.M_Branch_out = M_Branch;
@@ -29,11 +29,12 @@ module pl_ex_mem(
    assign xmem.adder_result_out = adder_result;
    assign xmem.regfile_rdat2_out = regfile_rdat2;
    assign xmem.reg_instr_out = reg_instr;
-
+   assign xmem.halt_out = halt;
    always_ff @(posedge CLK, negedge nRST) begin
-     if (!nRST) begin
+     if (!nRST) begin //TODO: or flush
         WB_MemToReg <= '0;
         WB_RegWrite <= '0;
+        halt <= '0;
         M_Branch <= '0;
         M_MemRead <= '0;
         M_MemWrite <= '0;
@@ -51,6 +52,7 @@ module pl_ex_mem(
         M_Branch <= xmem.M_Branch_in;
         M_MemRead <= xmem.M_MemRead_in;
         M_MemWrite <= xmem.M_MemWrite_in;
+        halt <= xmem.halt_in;
         alu_zero <= xmem.alu_zero_in;
         alu_output <= xmem.alu_output_in;
         adder_result <= xmem.adder_result_in;

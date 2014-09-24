@@ -14,7 +14,10 @@ module pl_if_id(
    assign ifid.instruction_out = instruction;
 
    always_ff @(posedge CLK, negedge nRST) begin
-     if (!nRST || ifid.flush) begin
+     if (!nRST) begin
+         instruction <= '0;
+         next_address <= '0;
+      end else if(ifid.flush) begin
          instruction <= '0;
          next_address <= '0;
       end else if (ifid.WEN == 1'b1) begin

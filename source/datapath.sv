@@ -69,7 +69,7 @@ module datapath (
   assign rfif.rsel1 = cuif.rs;
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = mweb.WB_RegWrite_out;
-  
+
   //TODO: FLUSH , not sure how flush should work?
   assign ifid.flush = dpif.dhit;
   assign idex.flush = 0;
@@ -190,8 +190,10 @@ module datapath (
   assign idex.immediate26_in = cuif.immediate26;
   assign idex.rt_in = cuif.rt;
   assign idex.rd_in = cuif.rd;
-  assign dpif.halt = cuif.halt; //double checked
-
+  assign dpif.halt = mweb.halt_out; //[pass along the halt]
+  assign idex.halt_in = cuif.halt;
+  assign xmem.halt_in = idex.halt_out;
+  assign mweb.halt_in = xmem.halt_out;
   /*
     PIPELINE motion control
     -- make sure no instruction move forward in PIPELINE
@@ -202,34 +204,34 @@ module datapath (
   assign stall = (dpif.dmemREN || dpif.dmemWEN ? (!dpif.dhit) : 0);
   always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
-           ifid.WEN <= 0;
+           ifid.WEN <= 1;
       end else begin
            ifid.WEN <= !stall;
       end
   end
   always_ff @(posedge CLK, negedge nRST) begin
        if(!nRST) begin
-           idex.WEN <= 0;
+           idex.WEN <= 1;
       end else begin
            idex.WEN <= !stall;
       end
   end
   always_ff @(posedge CLK, negedge nRST) begin
        if(!nRST) begin
-           xmem.WEN <= 0;
+           xmem.WEN <= 1;
       end else begin
            xmem.WEN <= !stall;
       end
   end
   always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
-           mweb.WEN <= 0;
+           mweb.WEN <= 1;
       end else begin
            mweb.WEN <= !stall;
       end
   end
 
-  
+
 
 
   /*
@@ -239,7 +241,7 @@ module datapath (
   assign ifid.instruction_in = dpif.imemload;
   assign ifid.next_address_in = pcif.pc_plus_4;
 
-//  assign idex.rs_in 
+//  assign idex.rs_in
   assign idex.shamt_in = cuif.shamt;
   assign idex.next_address_in = pcif.pc_plus_4;
   assign idex.WB_MemToReg_in = cuif.MemToReg;
