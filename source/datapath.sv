@@ -1,6 +1,6 @@
 /*
-  Pat Sabpisal
-  pat@uniduck.co
+
+  ssabpisa@purdue.edu, hxiong@purdue.edu
 
   datapath contains register file, control, hazard,
   muxes, and glue logic for processor
@@ -70,7 +70,6 @@ module datapath (
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = mweb.WB_RegWrite_out;
 
-  //TODO: FLUSH , not sure how flush should work?
   assign ifid.flush = dpif.dhit;
   assign idex.flush = 0;
   assign xmem.flush = 0;
@@ -93,34 +92,10 @@ module datapath (
     endcase
   end
 
-/*  assign rqif.dhit = dpif.dhit;
-  assign rqif.ihit = dpif.ihit;
-  assign rqif.ctr_iREN = cuif.iREN;
-  assign rqif.ctr_dWEN = cuif.dWEN;
-  assign rqif.ctr_dREN = cuif.dREN;*/
-//  assign
-
-
-  //TODO: ASK ERIC   -- we pasted this from rq unit
-  // always_ff @ (posedge CLK, negedge nRST) begin
-  //   if(!nRST) begin
-  //      dpif.dmemREN <= 0;
-  //      dpif.dmemREN <= 0;
-  //   end else begin
-  //      dpif.dmemREN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemRead_out : 0);
-  //      dpif.dmemWEN <= dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemWrite_out : 0);
-  //   end
-  // end
-
- // assign dpif.dmemREN = dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemRead_out : 0);
- // assign dpif.dmemWEN = dpif.dhit ? 0 : (dpif.ihit ? xmem.M_MemWrite_out : 0);
-
- assign dpif.dmemREN = xmem.M_MemRead_out;
- assign dpif.dmemWEN = xmem.M_MemWrite_out;
+  assign dpif.dmemREN = xmem.M_MemRead_out;
+  assign dpif.dmemWEN = xmem.M_MemWrite_out;
 
   assign dpif.imemREN = 1'b1;//rqif.imemREN;
-  // assign dpif.dmemREN = xmem.M_MemRead_out;//rqif.dmemREN;
-  // assign dpif.dmemWEN = xmem.M_MemWrite_out;//rqif.dmemWEN;
   assign dpif.dmemstore = xmem.regfile_rdat2_out;
   assign dpif.dmemaddr = xmem.alu_output_out;
 
@@ -142,18 +117,6 @@ module datapath (
   assign alu_a = idex.rdat1_out;//rfif.rdat1;
 
   //PIPELINED
-/*
-  always_comb begin : MUX_ALU_B
-       if(idex.EX_ALUSrc_out == 0) begin
-          alu_b = idex.rdat2_out;
-       end else if(idex.EX_ALUSrc_out == 1 && cuif.ALUSrc2) begin
-          alu_b = {27'b0, idex.shamt_out};
-       end else if(idex.EX_ALUSrc_out == 2) begin
-          alu_b = {idex.immediate_out, 16'b0};
-       end
-
-   end
-*/
   word_t shamt_extended;
 
   always_comb begin : MUX_ALU_B2
