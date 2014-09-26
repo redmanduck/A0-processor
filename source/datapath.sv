@@ -33,6 +33,7 @@ module datapath (
   pipereg_id_ex idex();
   pipereg_ex_mem xmem();
   pipereg_mem_wb mweb();
+  hazard_unit_if hzif();
 
   //ALU logics
   aluop_t alu_op;
@@ -59,7 +60,7 @@ module datapath (
   assign xmem.alu_output_in = alu_output;
 
 //  request_unit RUCU(CLK, nRST, rqif);
-
+  hazard_unit HZU(hzif);
   pl_if_id IFID(CLK, nRST, ifid);
   pl_id_ex IDEX(CLK, nRST, idex);
   pl_ex_mem EXMEM(CLK, nRST, xmem);
@@ -70,8 +71,8 @@ module datapath (
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = mweb.WB_RegWrite_out;
 
-  assign ifid.flush = dpif.dhit;
-  assign idex.flush = 0;
+  assign ifid.flush = dpif.dhit || hzif.flush_ifid;
+  assign idex.flush = hzif.flush_idex;
   assign xmem.flush = 0;
   assign mweb.flush = 0;
 
@@ -101,16 +102,16 @@ module datapath (
 
   assign pcif.ihit = ihit; //not used TODO:remove
   assign pcif.dhit = dhit; //not used
-  assign pcif.immediate26 = cuif.immediate26;
-  assign pcif.immediate = cuif.immediate;
+  assign pcif.immediate26 = idex.immediate26_out;
+  assign pcif.immediate = idex.immediate_out;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = nRST & !cuif.halt & dpif.ihit & !dpif.dhit;
+  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit;
 
-  assign pcif.PCSrc =  cuif.PCSrc;
+  //assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
 
   assign cuif.instruction = ifid.instruction_out;
-  assign cuif.alu_zf = alu_zf;
+  assign cuif.alu_zf = alu_zf; //change this..... latch
 
   //PIPELINED
   assign alu_op = idex.EX_ALUOp_out;//cuif.ALUctr;
@@ -183,7 +184,7 @@ module datapath (
        if(!nRST) begin
            xmem.WEN <= 1;
       end else begin
-           xmem.WEN <= !stall;
+           xmem.WEN <= !hzif.stall_xmem;
       end
   end
   always_ff @(posedge CLK, negedge nRST) begin
@@ -194,8 +195,18 @@ module datapath (
       end
   end
 
+  //mux in datapath to do stuff
+  always_comb begin
+     if(idex.M_Branch_out && alu_zf) begin
+        pcif.PCSrc = 2;
+     end else begin
+        pcif.PCSrc = cuif.PCSrc;
+     end
+  end
 
-
+   //hazard uniz
+   assign hzif.branch = cuif.Branch;
+   assign hzif.alu_zf = alu_zf;
 
   /*
     PIPELINE LATCHES connections
@@ -209,7 +220,7 @@ module datapath (
   assign idex.next_address_in = pcif.pc_plus_4;
   assign idex.WB_MemToReg_in = cuif.MemToReg;
   assign idex.WB_RegWrite_in = cuif.RegWr;
-  assign idex.M_Branch_in = cuif.Branch;     //TODO: Not yet Implemented
+  assign idex.M_Branch_in = cuif.Branch;
   assign idex.M_MemRead_in = cuif.dREN;
   assign idex.M_MemWrite_in = cuif.dWEN;
   assign idex.EX_RegDst_in = cuif.RegDst;
@@ -219,12 +230,13 @@ module datapath (
   assign idex.rdat1_in = rfif.rdat1;
   assign idex.rdat2_in = rfif.rdat2;
 
-
+  assign xmem.M_Branch_in = idex.M_Branch_out;
   assign xmem.WB_MemToReg_in = idex.WB_MemToReg_out;
   assign xmem.WB_RegWrite_in = idex.WB_RegWrite_out;
   assign xmem.M_MemRead_in = idex.M_MemRead_out;
   assign xmem.M_MemWrite_in = idex.M_MemWrite_out;
   assign xmem.regfile_rdat2_in = idex.rdat2_out;
+  assign xmem.alu_zero_in = alu_zf;
 
   assign mweb.WB_RegWrite_in = xmem.WB_RegWrite_out;
   assign mweb.WB_MemToReg_in = xmem.WB_MemToReg_out;

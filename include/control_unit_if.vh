@@ -31,15 +31,8 @@ interface control_unit_if;
   logic Branch;
   modport control (
     input instruction, alu_zf,
-    output opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, dWEN, dREN, MemToReg, RegWr,MemWr, Jump, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, halt
+    output Jump, Branch, opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, dWEN, dREN, MemToReg, RegWr,MemWr, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, halt
   );
-
-  modport tb (
-    output instruction, alu_zf,
-    input opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, MemToReg, RegWr,
-MemWr, Jump, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, halt
-  );
-
 endinterface
 
 

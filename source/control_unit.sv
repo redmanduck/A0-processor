@@ -64,16 +64,18 @@ module control_unit (
   end
 
   always_comb begin : PC_CONTROLS
-    cuif.Jump = 1'b0; //for what?
+    cuif.Jump = 1'b0;
+    cuif.Branch = 1'b0;
     if(cuif.opcode == RTYPE && cuif.funct == JR) begin
        cuif.PCSrc = 0; //read Rs
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == J || cuif.opcode == JAL) begin
        cuif.PCSrc = 1; //Link for JAL occur above
        cuif.Jump = 1'b1;
-    end else if(cuif.opcode == BEQ && cuif.alu_zf || cuif.opcode == BNE && !cuif.alu_zf) begin
-       cuif.PCSrc = 2;
+    end else if(cuif.opcode == BEQ || cuif.opcode == BNE) begin
+       cuif.PCSrc = 2; //move this to datapath mux
        cuif.Jump = 1'b0;
+       cuif.Branch = 1'b1;
     end else begin
        cuif.PCSrc = 4; //normal mode otherwise
     end
