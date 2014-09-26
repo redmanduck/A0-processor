@@ -102,10 +102,10 @@ module datapath (
 
   assign pcif.ihit = ihit; //not used TODO:remove
   assign pcif.dhit = dhit; //not used
-  assign pcif.immediate26 = idex.immediate26_out;
-  assign pcif.immediate = idex.immediate_out;
+  assign pcif.immediate26 = cuif.immediate26;
+  assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit;
+  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit;
 
   //assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
@@ -206,7 +206,7 @@ module datapath (
 
    //hazard uniz
    assign hzif.branch = cuif.Branch;
-   assign hzif.alu_zf = alu_zf;
+   assign hzif.alu_zf = ((rfif.rdat1 - rfif.rdat2) == 0);//alu_zf;
 
   /*
     PIPELINE LATCHES connections

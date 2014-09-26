@@ -70,6 +70,12 @@ module pl_id_ex(
          rt <= '0;
          rd <= '0;
          shamt <= '0;
+      end else if(idex.flush) begin
+        WB_MemToReg <= '0;
+        WB_RegWrite <= '0;
+        M_Branch <= '0;
+         M_MemRead <= '0;
+        M_MemWrite <= '0;
       end else if(idex.WEN == 1 && !idex.flush) begin
          WB_MemToReg <= idex.WB_MemToReg_in;
          WB_RegWrite <= idex.WB_RegWrite_in;

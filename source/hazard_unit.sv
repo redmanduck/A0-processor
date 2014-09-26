@@ -16,12 +16,12 @@ module hazard_unit(
      hzif.flush_idex = 0;
      hzif.pc_en = 1;
 
-    if(hzif.branch) begin
-       //FIRST BRANCH
+    if(hzif.branch && hzif.alu_zf) begin
+       //BRANCH TAKEN -- flush
        hzif.flush_ifid = 1;
-       hzif.pc_en = 0;
-       hzif.flush_idex = 1;
-       hzif.stall_idex = 1;
+//       hzif.pc_en = 0;
+      // hzif.stall_ifid = 1;
+
      end
   end
 

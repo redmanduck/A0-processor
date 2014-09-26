@@ -49,7 +49,7 @@ module program_counter (
               end
               2: begin
                  //BEQ/BNE
-                 PC_next = (PC + 4) + (pcif.immediate << 2);
+                 PC_next = (PC + 0) + (pcif.immediate << 2); //TODO : ask pranav
               end
               default: PC_next = PC + 4;
           endcase
