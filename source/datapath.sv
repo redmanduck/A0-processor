@@ -13,6 +13,8 @@
 `include "ru_cu_if.vh"
 `include "pc_if.vh"
 `include "pipereg_if.vh"
+`include "hazard_unit_if.vh"
+`include "forward_unit_if.vh"
 
 // alu op, mips op, and instruction type
 `include "cpu_types_pkg.vh"
@@ -34,11 +36,14 @@ module datapath (
   pipereg_ex_mem xmem();
   pipereg_mem_wb mweb();
   hazard_unit_if hzif();
+  forward_unit_if fwif();
 
   //ALU logics
   aluop_t alu_op;
   word_t alu_a;
   word_t alu_b;
+  word_t alu_a_fwd, alu_b_fwd;
+  word_t writeback;
   logic alu_nf;
   logic alu_vf;
   word_t alu_output;
@@ -49,23 +54,34 @@ module datapath (
   logic ihit; //not used
   logic dhit; //not used
   //sub-blocks
-  control_unit CU(CLK, nRST, cuif);
-
-  register_file RF(CLK, nRST, rfif);
-
-  program_counter PC(CLK, nRST, pcif);
-
-  alu ALU(.ALUOP(alu_op), .Port_A(alu_a), .Port_B(alu_b), .negative(alu_nf), .overflow(alu_vf), .output_port(alu_output), .zero(alu_zf));
-
-  assign xmem.alu_output_in = alu_output;
-
-//  request_unit RUCU(CLK, nRST, rqif);
   hazard_unit HZU(hzif);
   pl_if_id IFID(CLK, nRST, ifid);
   pl_id_ex IDEX(CLK, nRST, idex);
   pl_ex_mem EXMEM(CLK, nRST, xmem);
   pl_mem_wb MEMWB(CLK, nRST, mweb);
+  control_unit CU(CLK, nRST, cuif);
+  register_file RF(CLK, nRST, rfif);
+  program_counter PC(CLK, nRST, pcif);
+  forward_unit FWU(fwif);
 
+  alu ALU(.ALUOP(alu_op), .Port_A(alu_a_fwd), .Port_B(alu_b_fwd), .negative(alu_nf), .overflow(alu_vf), .output_port(alu_output), .zero(alu_zf));
+
+  always_comb begin : OPERAND_FORWARD_A
+     casez(fwif.forwardA)
+        1: alu_a_fwd = xmem.alu_output_out;
+        2: alu_a_fwd = writeback;
+        default: alu_a_fwd = alu_a;
+     endcase
+  end
+  always_comb begin : OPERAND_FORWARD_B
+     casez(fwif.forwardB)
+        1: alu_b_fwd = xmem.alu_output_out;
+        2: alu_b_fwd = writeback;
+        default: alu_b_fwd = alu_b;
+     endcase
+  end
+
+  assign xmem.alu_output_in = alu_output;
   //PIPELINED
   assign rfif.rsel1 = cuif.rs;
   assign rfif.rsel2 = cuif.rt;
@@ -79,12 +95,12 @@ module datapath (
   //PIPELINED rfif wdat
   always_comb begin : RFIF_WRITE
     casez (mweb.WB_MemToReg_out)
-      1: rfif.wdat = mweb.dmemload_out;
-      2: rfif.wdat = pcif.imemaddr + 4;//TODO: not implemetned yet, shd be mweb
-      default: rfif.wdat = mweb.alu_output_out;
+      1: writeback = mweb.dmemload_out;
+      2: writeback = pcif.imemaddr + 4;//TODO: not implemetned yet, shd be mweb
+      default: writeback = mweb.alu_output_out;
     endcase
   end
-
+  assign rfif.wdat = writeback;
   always_comb begin : MUX_RGDST
     casez (idex.EX_RegDst_out)
       1: xmem.reg_instr_in = idex.rd_out;
