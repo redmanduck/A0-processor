@@ -28,10 +28,10 @@ interface control_unit_if;
   logic MemRead;
   logic ALUSrc2; //second level mux selector to select operand from SHAMT
   logic Jump; //dont even know why thats there
-  logic Branch;
+  logic BranchNEQ, Branch;
   modport control (
     input instruction, alu_zf,
-    output Jump, Branch, opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, dWEN, dREN, MemToReg, RegWr,MemWr, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, halt
+    output Jump, Branch,  BranchNEQ, opcode, funct, rs, rd, rt, shamt, immediate, immediate26, iREN, dWEN, dREN, MemToReg, RegWr,MemWr, ExtOp, ALUctr, RegDst, PCSrc, ALUSrc, ALUSrc2, MemRead, halt
   );
 endinterface
 

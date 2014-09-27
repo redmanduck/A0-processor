@@ -71,7 +71,7 @@ module datapath (
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = mweb.WB_RegWrite_out;
 
-  assign ifid.flush = dpif.dhit || hzif.flush_ifid;
+  assign ifid.flush = hzif.flush_ifid;
   assign idex.flush = hzif.flush_idex;
   assign xmem.flush = 0;
   assign mweb.flush = 0;
@@ -105,7 +105,7 @@ module datapath (
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit;
+  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit
 
   //assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
@@ -195,6 +195,7 @@ module datapath (
       end
   end
 
+  //TODO: move this to decode stage!!! IMPORTANT
   //mux in datapath to do stuff
   always_comb begin
      if(idex.M_Branch_out && alu_zf) begin
@@ -206,9 +207,11 @@ module datapath (
 
    //hazard uniz
    assign hzif.branch = cuif.Branch;
-   assign hzif.alu_zf = ((rfif.rdat1 - rfif.rdat2) == 0);//alu_zf;
-
-  /*
+   assign hzif.branch_neq = cuif.BranchNEQ;
+   //this signal tells the HZU that we are going to take this branch
+   assign hzif.is_equal = ((rfif.rdat1 - rfif.rdat2) == 0);
+   assign hzif.dhit = dpif.dhit;
+   /*
     PIPELINE LATCHES connections
   */
 
