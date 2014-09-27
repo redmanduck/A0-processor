@@ -6,6 +6,8 @@ interface forward_unit_if;
   logic [4:0] ex_rs, ex_rt;
   logic [4:0] mem_rd, wb_rd;
   logic regWr, regRd; // reg write an read
+  logic forwardData;  // sig to choose data to write to mem
+  logic memWr;  // mem write enable signal
   /* forwardA is the control signal choose which operand to feed in
   for alu operand A
    */
@@ -16,8 +18,8 @@ interface forward_unit_if;
   logic [1:0] forwardB;
 
   modport fwu(
-    input ex_rs, ex_rt, mem_rd, wb_rd, regWr, regRd,
-    output forwardA, forwardB
+    input ex_rs, ex_rt, mem_rd, wb_rd, regWr, regRd, memWr,
+    output forwardA, forwardB, forwardData
   );
 endinterface
 `endif
