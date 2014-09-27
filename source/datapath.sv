@@ -81,6 +81,13 @@ module datapath (
      endcase
   end
 
+  assign fwif.ex_rs = idex.rs_out;
+  assign fwif.ex_rt = idex.rt_out;
+  assign fwif.mem_rd  = xmem.reg_instr_out;
+  assign fwif.wb_rd = xmem.reg_instr_out; //reg_instr is rd
+  assign fwif.regWr = mweb.WB_RegWrite_out;//cuif.RegWr;
+  assign fwif.regRd = 1'b1;
+  assign fwif.memWr = idex.M_MemWrite_out;
   assign xmem.alu_output_in = alu_output;
   //PIPELINED
   assign rfif.rsel1 = cuif.rs;
@@ -121,8 +128,8 @@ module datapath (
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit
-
+  assign pcif.pc_en = hzif.pc_en & nRST & !mweb.halt_out & dpif.ihit & !dpif.dhit; //dhit
+ //mweb-> cuif.halt
   //assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
 
@@ -158,7 +165,7 @@ module datapath (
  //PIPELINED (ID)
  always_comb begin : INSTR
        if(cuif.ExtOp) begin //sign Extended
-          idex.immediate_in = $signed(cuif.immediate);
+          idex.immediate_in = {16'hFFFF, cuif.immediate}; //TODO: $signed(cuif.immediate);
        end else begin //zero Extended
           idex.immediate_in = {16'h0000, cuif.immediate};
        end
@@ -170,6 +177,7 @@ module datapath (
   assign idex.immediate26_in = cuif.immediate26;
   assign idex.rt_in = cuif.rt;
   assign idex.rd_in = cuif.rd;
+  assign idex.rs_in = cuif.rs;
   assign dpif.halt = mweb.halt_out; //[pass along the halt]
   assign idex.halt_in = cuif.halt;
   assign xmem.halt_in = idex.halt_out;
@@ -253,8 +261,12 @@ module datapath (
   assign xmem.WB_MemToReg_in = idex.WB_MemToReg_out;
   assign xmem.WB_RegWrite_in = idex.WB_RegWrite_out;
   assign xmem.M_MemRead_in = idex.M_MemRead_out;
+
   assign xmem.M_MemWrite_in = idex.M_MemWrite_out;
-  assign xmem.regfile_rdat2_in = idex.rdat2_out;
+
+  //assign xmem.regfile_rdat2_in = idex.rdat2_out;//alu_b_fwd;//idex.rdat2_out;
+  assign xmem.regfile_rdat2_in = (fwif.forwardData ? xmem.alu_output_out : idex.rdat2_out);
+
   assign xmem.alu_zero_in = alu_zf;
 
   assign mweb.WB_RegWrite_in = xmem.WB_RegWrite_out;
