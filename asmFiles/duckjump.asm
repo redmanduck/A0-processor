@@ -8,10 +8,10 @@
   ori $1, $zero, 1
   ori $2, $zero, 2
   ori $3, $zero, 3
-  ori $4, $zero, 4
 
   superduck:
-  jal layegg  #0  (addr 31 contains 0)
+  ori $4, $zero, 4
+  jal layegg  #0  (addr 31 contains 4)
   halt        #4
 
   layegg:

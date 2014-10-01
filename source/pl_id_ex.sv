@@ -22,11 +22,12 @@ module pl_id_ex(
    word_t rdat2;
    word_t sign_ext32;
    logic [4:0] rt;
-   logic [4:0] rd;
+   logic [4:0] rd, rs;
    logic [4:0] shamt;
    logic [25:0] immediate26;
-   logic [15:0] immediate;
+   word_t immediate;
    logic halt;
+
 
    assign idex.WB_MemToReg_out = WB_MemToReg;
    assign idex.WB_RegWrite_out = WB_RegWrite;
@@ -42,6 +43,7 @@ module pl_id_ex(
    assign idex.sign_ext32_out = sign_ext32;
    assign idex.rt_out = rt;
    assign idex.rd_out = rd;
+   assign idex.rs_out = rs;
    assign idex.EX_ALUSrc2_out = EX_ALUSrc2;
    assign idex.shamt_out = shamt;
    assign idex.immediate26_out = immediate26;
@@ -69,6 +71,7 @@ module pl_id_ex(
          halt <= '0;
          rt <= '0;
          rd <= '0;
+         rs <= '0;
          shamt <= '0;
       end else if(idex.flush) begin
         WB_MemToReg <= '0;
@@ -94,6 +97,7 @@ module pl_id_ex(
          sign_ext32 <= idex.sign_ext32_in;
          rt <= idex.rt_in;
          rd <= idex.rd_in;
+         rs <= idex.rs_in;
          immediate26 <= idex.immediate26_in;
          immediate <= idex.immediate_in;
       end

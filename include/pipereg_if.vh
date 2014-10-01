@@ -9,7 +9,8 @@ interface pipereg_id_ex;
    logic halt_in, halt_out;
    logic WEN; //do WEN
    logic flush; //do NOP
-   logic WB_MemToReg_in, WB_RegWrite_in, M_Branch_in, M_MemRead_in, M_MemWrite_in, EX_RegDst_in;
+   logic WB_MemToReg_in, WB_RegWrite_in, M_Branch_in, M_MemRead_in, M_MemWrite_in;
+   logic [1:0] EX_RegDst_in;
    logic [1:0] EX_ALUSrc_in, EX_ALUSrc_out;
    logic WB_MemToReg_out, WB_RegWrite_out, M_Branch_out, M_MemRead_out, M_MemWrite_out, EX_RegDst_out;
 
@@ -18,6 +19,7 @@ interface pipereg_id_ex;
    word_t rdat1_in, rdat1_out;
    word_t rdat2_in, rdat2_out;
    word_t sign_ext32_in, sign_ext32_out;
+   logic [4:0] rs_in , rs_out;
    logic [4:0] rt_in, rt_out;
    logic [4:0] rd_in, rd_out;
    logic [4:0] shamt_in, shamt_out;
@@ -26,11 +28,11 @@ interface pipereg_id_ex;
    word_t immediate_in, immediate_out; //extended immediate
 
   modport idex(
-     input WEN, flush, WB_MemToReg_in, immediate26_in,immediate_in,
+     input WEN, rs_in, flush, WB_MemToReg_in, immediate26_in,immediate_in,
      shamt_in, EX_ALUSrc2_in, WB_RegWrite_in, M_Branch_in, M_MemRead_in,
      M_MemWrite_in, EX_RegDst_in, EX_ALUOp_in, EX_ALUSrc_in, next_address_in,
      rdat1_in, rdat2_in, sign_ext32_in, rt_in, rd_in, halt_in,
-     output WB_MemToReg_out, WB_RegWrite_out, immediate26_out,immediate_out,
+     output WB_MemToReg_out, rs_out, WB_RegWrite_out, immediate26_out,immediate_out,
      shamt_out, EX_ALUSrc2_out, M_Branch_out, M_MemRead_out, M_MemWrite_out,
      EX_RegDst_out, EX_ALUOp_out, EX_ALUSrc_out, next_address_out, rdat1_out,
      rdat2_out, sign_ext32_out, rt_out, rd_out, halt_out
@@ -91,7 +93,7 @@ interface pipereg_mem_wb;
 
   logic [4:0] reg_instr_in, reg_instr_out;
    word_t alu_output_in, alu_output_out;
-
+  //reg_instr IS THE REGISTER DESTINATION
   modport mwb(
     input WEN, flush, dmemload_in, dmemaddr_in,
     WB_RegWrite_in, WB_MemToReg_in, alu_output_in, reg_instr_in, halt_in,

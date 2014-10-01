@@ -109,7 +109,7 @@ module datapath (
   end
   assign rfif.wdat = writeback;
   always_comb begin : MUX_RGDST
-    casez (idex.EX_RegDst_out)
+    casez (idex.EX_RegDst_out) //TODO: this looks wrong , try xmem.EX_RegDst_out
       1: xmem.reg_instr_in = idex.rd_out;
       2: xmem.reg_instr_in = 31; //JAL
       default: xmem.reg_instr_in = idex.rt_out;
@@ -128,7 +128,7 @@ module datapath (
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
-  assign pcif.pc_en = hzif.pc_en & nRST & !mweb.halt_out & dpif.ihit & !dpif.dhit; //dhit
+  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit
  //mweb-> cuif.halt
   //assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
@@ -220,7 +220,7 @@ module datapath (
   end
 
   //TODO: move this to decode stage!!! IMPORTANT
-  //mux in datapath to do stuff
+  //mux in datapath to do stuff  ^umm what?
   always_comb begin
      if(idex.M_Branch_out && alu_zf) begin
         pcif.PCSrc = 2;
@@ -230,6 +230,7 @@ module datapath (
   end
 
    //hazard uniz
+   assign hzif.jump = cuif.Jump;
    assign hzif.branch = cuif.Branch;
    assign hzif.branch_neq = cuif.BranchNEQ;
    //this signal tells the HZU that we are going to take this branch

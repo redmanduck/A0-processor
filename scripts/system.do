@@ -51,6 +51,12 @@ add wave -noupdate -group PLATCH_ALU /system_tb/DUT/CPU/DP/ALU/negative
 add wave -noupdate -group PLATCH_ALU /system_tb/DUT/CPU/DP/ALU/overflow
 add wave -noupdate -group PLATCH_ALU /system_tb/DUT/CPU/DP/ALU/output_port
 add wave -noupdate -group PLATCH_ALU /system_tb/DUT/CPU/DP/ALU/zero
+add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/ex_rs
+add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/ex_rt
+add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/mem_rd
+add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/wb_rd
+add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/forwardA
+add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/forwardB
 add wave -noupdate -expand /system_tb/DUT/CPU/DP/RF/regs
 add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/halt
 add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/iREN
@@ -89,7 +95,6 @@ add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/flus
 add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/flush_wb
 add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/branch
 add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/pc_en
-add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/alu_zf
 add wave -noupdate /system_tb/DUT/CPU/CLK
 add wave -noupdate /system_tb/DUT/CPU/nRST
 add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/ihit
@@ -140,7 +145,7 @@ add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/WB_MemToReg
 add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/reg_instr
 add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/halt
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {90989 ps} 0}
+WaveRestoreCursors {{Cursor 1} {7060 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 101
