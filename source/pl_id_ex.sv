@@ -8,7 +8,8 @@ module pl_id_ex(
    pipereg_id_ex.idex idex
 );
    //WB control regs
-   logic WB_MemToReg, WB_RegWrite;
+   logic [1:0] WB_MemToReg;
+   logic WB_RegWrite;
 
    //MEM control regs (TODO: jump?)
    logic M_Branch, M_MemRead, M_MemWrite;
@@ -27,8 +28,9 @@ module pl_id_ex(
    logic [25:0] immediate26;
    word_t immediate;
    logic halt;
+   word_t pcn;
 
-
+   assign idex.pcn_out = pcn;
    assign idex.WB_MemToReg_out = WB_MemToReg;
    assign idex.WB_RegWrite_out = WB_RegWrite;
    assign idex.M_Branch_out = M_Branch;
@@ -55,6 +57,7 @@ module pl_id_ex(
       if(!nRST) begin //or flush
          WB_MemToReg <= '0;
          WB_RegWrite <= '0;
+         pcn <= '0;
          M_Branch <= '0;
          M_MemRead <= '0;
          M_MemWrite <= '0;
@@ -77,12 +80,14 @@ module pl_id_ex(
         WB_MemToReg <= '0;
         WB_RegWrite <= '0;
         M_Branch <= '0;
+        pcn <= '0;
          M_MemRead <= '0;
         M_MemWrite <= '0;
       end else if(idex.WEN == 1 && !idex.flush) begin
          WB_MemToReg <= idex.WB_MemToReg_in;
          WB_RegWrite <= idex.WB_RegWrite_in;
          halt <= idex.halt_in;
+         pcn <= idex.pcn_in;
          shamt <= idex.shamt_in;
          M_Branch <= idex.M_Branch_in;
          M_MemRead <= idex.M_MemRead_in;

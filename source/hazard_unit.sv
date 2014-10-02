@@ -24,7 +24,7 @@ module hazard_unit(
        hzif.flush_ifid = 1;
       // hzif.pc_en = 0;
      end else if(hzif.jump) begin
-       hzif.pc_en = 0;
+      // hzif.pc_en = 0;
        hzif.flush_ifid = 1;
      end
 

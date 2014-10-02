@@ -13,10 +13,11 @@ module pl_mem_wb(
    word_t dmemaddr;
 
    logic WB_RegWrite;
-   logic WB_MemToReg;
+   logic [1:0] WB_MemToReg;
    logic [4:0] reg_instr;
    logic halt;
-
+   word_t pcn;
+   assign mwb.pcn_out = pcn;
    assign mwb.WB_RegWrite_out = WB_RegWrite;
    assign mwb.WB_MemToReg_out = WB_MemToReg;
    assign mwb.dmemload_out = dmemload;
@@ -30,15 +31,18 @@ module pl_mem_wb(
          dmemload <= '0;
          dmemaddr <= '0;
          WB_RegWrite <= '0;
+         pcn <= '0;
          alu_output <= '0;
          reg_instr <= '0;
          WB_MemToReg <= '0;
          halt <= '0;
       end else if(mwb.flush == 1'b1) begin
          WB_RegWrite <= 0;
+         pcn <= '0;
       end else if(mwb.WEN == 1'b1) begin
          dmemload <= mwb.dmemload_in;
          halt <= mwb.halt_in;
+         pcn <= mwb.pcn_in;
          dmemaddr <= mwb.dmemaddr_in;
          WB_RegWrite <= mwb.WB_RegWrite_in;
          WB_MemToReg <= mwb.WB_MemToReg_in;

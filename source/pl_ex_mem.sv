@@ -9,11 +9,12 @@ module pl_ex_mem(
 );
 
    //WB control regs
-   logic WB_MemToReg, WB_RegWrite;
+   logic [1:0] WB_MemToReg;
+   logic WB_RegWrite;
    //M control regs
    logic M_Branch, M_MemRead, M_MemWrite;
    logic alu_zero;
-
+   word_t pcn;
    word_t alu_output; //output from ALU 1
    word_t adder_result; //output from adder
    word_t regfile_rdat2; //register file's rdat2
@@ -30,9 +31,11 @@ module pl_ex_mem(
    assign xmem.regfile_rdat2_out = regfile_rdat2;
    assign xmem.reg_instr_out = reg_instr;
    assign xmem.halt_out = halt;
+   assign xmem.pcn_out = pcn;
    always_ff @(posedge CLK, negedge nRST) begin
      if (!nRST) begin //TODO: or flush
         WB_MemToReg <= '0;
+        pcn <= '0;
         WB_RegWrite <= '0;
         halt <= '0;
         M_Branch <= '0;
@@ -45,9 +48,11 @@ module pl_ex_mem(
         reg_instr <= '0;
      end else if (xmem.flush == 1'b1) begin
         M_MemRead <= 0;
+        pcn <= '0;
         M_MemWrite <= 0;
      end else if (!xmem.flush && xmem.WEN == 1'b1) begin
         WB_MemToReg <= xmem.WB_MemToReg_in;
+        pcn <= xmem.pcn_in;
         WB_RegWrite <= xmem.WB_RegWrite_in;
         M_Branch <= xmem.M_Branch_in;
         M_MemRead <= xmem.M_MemRead_in;

@@ -103,7 +103,7 @@ module datapath (
   always_comb begin : RFIF_WRITE
     casez (mweb.WB_MemToReg_out)
       1: writeback = mweb.dmemload_out;
-      2: writeback = pcif.imemaddr + 4;//TODO: not implemetned yet, shd be mweb
+      2: writeback = mweb.pcn_out;  //pcif.imemaddr + 4;
       default: writeback = mweb.alu_output_out;
     endcase
   end
@@ -257,6 +257,11 @@ module datapath (
   assign idex.EX_ALUSrc2_in = cuif.ALUSrc2;
   assign idex.rdat1_in = rfif.rdat1;
   assign idex.rdat2_in = rfif.rdat2;
+
+  assign ifid.pcn_in = pcif.pc_plus_4;
+  assign idex.pcn_in = ifid.pcn_out;
+  assign xmem.pcn_in = idex.pcn_out;
+  assign mweb.pcn_in = xmem.pcn_out;
 
   assign xmem.M_Branch_in = idex.M_Branch_out;
   assign xmem.WB_MemToReg_in = idex.WB_MemToReg_out;
