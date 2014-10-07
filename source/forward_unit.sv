@@ -88,7 +88,7 @@ end
 always_comb begin : forwardR1 
     fw_if.forwardR1 = 0;
     if(fw_if.memRegWr == 1) begin
-    	if((fw_if.ex_RegDst == 1) && (fw_if.id_rs == fw_if.mem_rd))begin
+    	if((fw_if.ex_RegDst == 1) && (fw_if.id_rs == fw_if.mem_rd) && (fw_if.id_rs != 0))begin
     		fw_if.forwardR1 = 1;
     	end else if((fw_if.ex_RegDst == 0) && (fw_if.id_rs == fw_if.mem_rd)) begin
     		fw_if.forwardR1 = 2;

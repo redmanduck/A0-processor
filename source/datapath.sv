@@ -255,7 +255,7 @@ module datapath (
    assign hzif.branch_neq = cuif.BranchNEQ;
    //this signal tells the HZU that we are going to take this branch
    assign hzif.is_equal = reg_equal;
-   assign hzif.dhit = (dpif.dmemREN || dpif.dmemWEN ? dpif.dhit :  0);
+   assign hzif.dhit = ((dpif.dmemREN || dpif.dmemWEN) ? dpif.dhit :  0);
    assign hzif.idex_rs = idex.rs_out;
    assign hzif.mwb_rd = mweb.reg_instr_out;
    /*

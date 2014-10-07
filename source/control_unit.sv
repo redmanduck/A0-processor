@@ -74,11 +74,11 @@ module control_unit (
        cuif.PCSrc = 1; //Link for JAL occur above
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == BEQ) begin
-       cuif.PCSrc = 2; //move this to datapath mux
+     // cuif.PCSrc = 2; //move this to datapath mux
        cuif.Jump = 1'b0;
        cuif.Branch = 1'b1;
     end else if(cuif.opcode == BNE) begin
-       cuif.PCSrc = 2;
+     //  cuif.PCSrc = 2;
        cuif.BranchNEQ = 1'b1;
     end else begin
        cuif.PCSrc = 4; //normal mode otherwise
