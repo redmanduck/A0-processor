@@ -12,11 +12,27 @@ module forward_unit(forward_unit_if.fwu fw_if);
 //TODO: check that 2:
 always_comb begin : forwardA
 	fw_if.forwardA = 0;
-	if(fw_if.regWr && fw_if.regRd)begin
-		if(fw_if.mem_rd == fw_if.ex_rs)begin
-			fw_if.forwardA = 1 && fw_if.mem_rd && fw_if.ex_rs;
-		end else if(fw_if.ex_rs == fw_if.wb_rd)begin
-			fw_if.forwardA = 2 && fw_if.ex_rs && fw_if.wb_rd;
+	if(fw_if.regWr && fw_if.regRd )begin
+		if(fw_if.exMemRead && (fw_if.mem_rd == fw_if.ex_rs) && (fw_if.mem_rd != 0)) begin
+
+			//if the instruction before is I TYPE
+			fw_if.forwardA = 3; //forward the Memory output from stage MEM
+
+		end else if (fw_if.wbMemRead && (fw_if.wb_rd == fw_if.ex_rs) && (fw_if.ex_rs != 0)) begin
+
+			//if the instruction 2 stages before is I TYPE
+			fw_if.forwardA = 2; //forward the Writeback output from stage WB
+
+		end else if(fw_if.mem_rd == fw_if.ex_rs  ) begin
+
+			//if the instruction before is not I TYPE but rd, rs match
+			fw_if.forwardA = 1 && fw_if.mem_rd && fw_if.ex_rs ; //forward ALU Output from stage MEM
+
+		end else if((fw_if.ex_rs == fw_if.wb_rd) && (fw_if.wb_rd != 0))begin
+
+			//if TWO instructions before matches (any type)
+			fw_if.forwardA = 2 ; //forward writeback from WB stage
+
 		end else begin
 			fw_if.forwardA  = 0;
 		end
@@ -24,6 +40,7 @@ always_comb begin : forwardA
 		fw_if.forwardA = 0;
 	end
 end
+
 // forwardB choose right value to forward for operend B
 //assign fw_if.forwardB =(!fw_if.memWr) && (fw_if.regWr && fw_if.regRd) && ((fw_if.ex_rs== fw_if.ex_rt) ? 0 : (fw_if.mem_rd == fw_if.ex_rt) ? 1 : ((fw_if.wb_rd == fw_if.ex_rt) ? 2 : 0));
 //TODO: why I compare rs and rt? I may use it for avoiding forward when branch is taken
@@ -31,11 +48,14 @@ end
 always_comb begin : forwardB
 	fw_if.forwardB = 0;
 	/*
-			only forward B only if we choose rd over rt (RTYPE)
+			might B only if we choose rd over rt (RTYPE), probably
 	*/
 
 	if(!fw_if.memWr && fw_if.regWr && fw_if.regRd && (fw_if.ex_RegDst == 1)) begin
-		if((fw_if.mem_rd == fw_if.ex_rt) && (fw_if.ex_rt != 0))begin
+
+		if(fw_if.exMemRead && (fw_if.mem_rd == fw_if.ex_rt) && (fw_if.mem_rd != 0)) begin
+			fw_if.forwardB = 3;
+		end	else if((fw_if.mem_rd == fw_if.ex_rt) && (fw_if.ex_rt != 0))begin
 			fw_if.forwardB = 1;
 		end else if((fw_if.wb_rd == fw_if.ex_rt) && (fw_if.wb_rd != 0))begin
 			fw_if.forwardB = 2;
@@ -61,7 +81,22 @@ always_comb begin : proc_forwarddata
 	end
 end
 
-assign fw_if.forwardR1 = fw_if.memRegWr ? (fw_if.id_rs == fw_if.mem_rd ? 1 : 0) : 0;
+//assign fw_if.forwardR1 = fw_if.memRegWr ? (fw_if.id_rs == fw_if.mem_rd ? 1 : 0) : 0;
+/*
+	R1 is dependent on RTYPE-ness 9or I TYPE) ex_RegDst
+*/
+always_comb begin : forwardR1 
+    fw_if.forwardR1 = 0;
+    if(fw_if.memRegWr == 1) begin
+    	if((fw_if.ex_RegDst == 1) && (fw_if.id_rs == fw_if.mem_rd))begin
+    		fw_if.forwardR1 = 1;
+    	end else if((fw_if.ex_RegDst == 0) && (fw_if.id_rs == fw_if.mem_rd)) begin
+    		fw_if.forwardR1 = 2;
+    	end else begin
+    		fw_if.forwardR1 = 0;
+    	end
+    end
+end
 //assign fw_if.forwardR2 = (fw_if.memRegWr || fw_if.exMemWr) ? (fw_if.id_rt == fw_if.mem_rd ? 1 : 0) : 0;
 
 always_comb begin : forwardR2

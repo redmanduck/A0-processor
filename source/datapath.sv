@@ -71,6 +71,7 @@ module datapath (
      casez(fwif.forwardA)
         1: alu_a_fwd = xmem.alu_output_out;
         2: alu_a_fwd = writeback;
+        3: alu_a_fwd = dpif.dmemload;
         default: alu_a_fwd = alu_a;
      endcase
   end
@@ -78,6 +79,7 @@ module datapath (
      casez(fwif.forwardB)
         1: alu_b_fwd = xmem.alu_output_out;
         2: alu_b_fwd = writeback;
+        3: alu_b_fwd = dpif.dmemload;
         default: alu_b_fwd = alu_b;
      endcase
   end
@@ -123,7 +125,7 @@ module datapath (
     endcase
   end
   assign fwif.ex_RegDst = idex.EX_RegDst_out;
-  
+
   assign dpif.dmemREN = xmem.M_MemRead_out;
   assign dpif.dmemWEN = xmem.M_MemWrite_out;
 
@@ -229,9 +231,11 @@ module datapath (
   
   assign fwif.id_rt = cuif.rt;
   assign fwif.id_rs = cuif.rs;
-  assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : rfif.rdat1); //incomplete
+ // assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : rfif.rdat1); //incomplete
+   assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : (fwif.forwardR1 == 2 ? dpif.dmemload : (fwif.forwardR1 == 3 ? writeback : rfif.rdat1)));
+
  // assign fwd_rdat2 = (fwif.forwardR2 == 1 ? xmem.alu_output_out : (fwif.forwardR2 == 2 ? alu_output : (fwif.forwardR2 == 3 ? mweb.alu_output_out : (fwif.forwardR2 == 4 ? xmem.pcn_out : rfif.rdat2))));
-   assign fwd_rdat2 = (fwif.forwardR2 == 1 ? xmem.alu_output_out : (fwif.forwardR2 == 2 ? alu_output : (fwif.forwardR2 == 3 ? writeback : (fwif.forwardR2 == 4 ? xmem.pcn_out : rfif.rdat2))));
+  assign fwd_rdat2 = (fwif.forwardR2 == 1 ? xmem.alu_output_out : (fwif.forwardR2 == 2 ? alu_output : (fwif.forwardR2 == 3 ? writeback : (fwif.forwardR2 == 4 ? xmem.pcn_out : rfif.rdat2))));
 
   logic reg_equal;
   assign reg_equal = ((fwd_rdat1 - fwd_rdat2) == 0 ? 1 : 0);
@@ -298,7 +302,10 @@ module datapath (
   assign mweb.dmemload_in = dpif.dmemload;
   assign mweb.alu_output_in = xmem.alu_output_out;
   assign fwif.wbRegWr = mweb.WB_RegWrite_out;
+  assign fwif.exMemRead = xmem.M_MemRead_out;
+  assign fwif.wbMemRead = mweb.M_MemRead_out;
 
+  assign mweb.M_MemRead_in = xmem.M_MemRead_in;
   assign mweb.reg_instr_in = xmem.reg_instr_out;
   assign rfif.wsel = mweb.reg_instr_out;
 

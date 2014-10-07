@@ -96,13 +96,14 @@ interface pipereg_mem_wb;
   logic WB_RegWrite_in, WB_RegWrite_out;
   word_t pcn_out, pcn_in;
   logic [4:0] reg_instr_in, reg_instr_out;
+  logic M_MemRead_in, M_MemRead_out;
    word_t alu_output_in, alu_output_out;
   //reg_instr IS THE REGISTER DESTINATION
   modport mwb(
     input WEN, flush, pcn_in, dmemload_in, dmemaddr_in,
-    WB_RegWrite_in, WB_MemToReg_in, alu_output_in, reg_instr_in, halt_in,
+    WB_RegWrite_in, WB_MemToReg_in, alu_output_in, reg_instr_in, halt_in, M_MemRead_in,
     output WB_RegWrite_out, pcn_out, alu_output_out, halt_out,
-    WB_MemToReg_out, dmemload_out, dmemaddr_out, reg_instr_out
+    WB_MemToReg_out, dmemload_out, dmemaddr_out, reg_instr_out, M_MemRead_out
   );
 endinterface
 
