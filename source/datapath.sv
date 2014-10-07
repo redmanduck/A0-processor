@@ -84,12 +84,16 @@ module datapath (
 
   assign fwif.ex_rs = idex.rs_out;
   assign fwif.ex_rt = idex.rt_out;
+  assign fwif.ex_rd = idex.rd_out;
   assign fwif.mem_rd  = xmem.reg_instr_out; //why is mem_rd and wb_rd coming from same place
-  assign fwif.wb_rd = xmem.reg_instr_out; //why do you call this wb_rd if its comming from xmem 
+  assign fwif.wb_rd = mweb.reg_instr_out;//xmem.reg_instr_out; //why do you call this wb_rd if its comming from xmem  ******************
   assign fwif.regWr = mweb.WB_RegWrite_out || xmem.WB_RegWrite_out;//cuif.RegWr;
   assign fwif.regRd = 1'b1;
   assign fwif.memWr = idex.M_MemWrite_out;
   assign fwif.memRegWr = xmem.WB_RegWrite_out;
+  assign fwif.exRegWr = idex.WB_RegWrite_out; 
+  assign fwif.exMemWr = idex.M_MemWrite_out;//cuif.MemWr;
+
   assign xmem.alu_output_in = alu_output;
   //PIPELINED
   assign rfif.rsel1 = cuif.rs;
@@ -118,7 +122,8 @@ module datapath (
       default: xmem.reg_instr_in = idex.rt_out;
     endcase
   end
-
+  assign fwif.ex_RegDst = idex.EX_RegDst_out;
+  
   assign dpif.dmemREN = xmem.M_MemRead_out;
   assign dpif.dmemWEN = xmem.M_MemWrite_out;
 
@@ -222,10 +227,12 @@ module datapath (
       end
   end
   
-  assign fwif.id_rt = idex.rt_out;
-  assign fwif.id_rs = idex.rs_out;
-  assign fwd_rdat1 = (fwif.forwardR1 ? xmem.alu_output_out : rfif.rdat1);
-  assign fwd_rdat2 = (fwif.forwardR2 ? xmem.alu_output_out : rfif.rdat2);
+  assign fwif.id_rt = cuif.rt;
+  assign fwif.id_rs = cuif.rs;
+  assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : rfif.rdat1); //incomplete
+ // assign fwd_rdat2 = (fwif.forwardR2 == 1 ? xmem.alu_output_out : (fwif.forwardR2 == 2 ? alu_output : (fwif.forwardR2 == 3 ? mweb.alu_output_out : (fwif.forwardR2 == 4 ? xmem.pcn_out : rfif.rdat2))));
+   assign fwd_rdat2 = (fwif.forwardR2 == 1 ? xmem.alu_output_out : (fwif.forwardR2 == 2 ? alu_output : (fwif.forwardR2 == 3 ? writeback : (fwif.forwardR2 == 4 ? xmem.pcn_out : rfif.rdat2))));
+
   logic reg_equal;
   assign reg_equal = ((fwd_rdat1 - fwd_rdat2) == 0 ? 1 : 0);
   //TODO: move this to decode stage!!! IMPORTANT
@@ -244,7 +251,7 @@ module datapath (
    assign hzif.branch_neq = cuif.BranchNEQ;
    //this signal tells the HZU that we are going to take this branch
    assign hzif.is_equal = reg_equal;
-   assign hzif.dhit = dpif.dhit;
+   assign hzif.dhit = (dpif.dmemREN || dpif.dmemWEN ? dpif.dhit :  0);
    assign hzif.idex_rs = idex.rs_out;
    assign hzif.mwb_rd = mweb.reg_instr_out;
    /*
@@ -266,8 +273,8 @@ module datapath (
   assign idex.EX_ALUSrc_in = cuif.ALUSrc;
   assign idex.EX_ALUOp_in = cuif.ALUctr;
   assign idex.EX_ALUSrc2_in = cuif.ALUSrc2;
-  assign idex.rdat1_in = rfif.rdat1;
-  assign idex.rdat2_in = rfif.rdat2;
+  assign idex.rdat1_in = fwd_rdat1;
+  assign idex.rdat2_in = fwd_rdat2;
 
   assign ifid.pcn_in = pcif.pc_plus_4;
   assign idex.pcn_in = ifid.pcn_out;
@@ -290,6 +297,7 @@ module datapath (
   assign mweb.WB_MemToReg_in = xmem.WB_MemToReg_out;
   assign mweb.dmemload_in = dpif.dmemload;
   assign mweb.alu_output_in = xmem.alu_output_out;
+  assign fwif.wbRegWr = mweb.WB_RegWrite_out;
 
   assign mweb.reg_instr_in = xmem.reg_instr_out;
   assign rfif.wsel = mweb.reg_instr_out;

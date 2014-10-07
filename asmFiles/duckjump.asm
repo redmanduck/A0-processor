@@ -12,6 +12,7 @@
   superduck:
   ori $4, $zero, 4
   jal layegg  #0  (addr 31 contains 4)
+  sw $3, $zero, 0xF4
   halt        #4
 
   layegg:
@@ -21,7 +22,3 @@
 
   #PC order: 0, 8, C, 4
 
-  org 0x00F0
-  cfw 0x7337
-  cfw 0x2701
-  cfw 0x1337
