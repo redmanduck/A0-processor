@@ -1,6 +1,7 @@
 /*
    Hazard Unit
 */
+
 `include "hazard_unit_if.vh"
 
 module hazard_unit(
@@ -18,14 +19,17 @@ module hazard_unit(
      hzif.flush_xmem = 0;
      hzif.flush_wb = 0;
 
-     hzif.pc_en = 1;
+     hzif.pc_en = !hzif.dhit;
 
      if((hzif.branch && hzif.is_equal) || (hzif.branch_neq && !hzif.is_equal)) begin
-       hzif.flush_ifid = 1;
-      // hzif.pc_en = 0;
+        hzif.flush_ifid = 1;
+        hzif.pc_en = 1;
      end else if(hzif.jump) begin
       // hzif.pc_en = 0;
-       hzif.flush_ifid = 1;
+        hzif.flush_ifid = 1;
+     end else if(hzif.idex_rs == hzif.mwb_rd && (hzif.idex_rs && hzif.mwb_rd)) begin
+       // hzif.pc_en = 0;
+        hzif.stall_ifid = 1;
      end
 
   end

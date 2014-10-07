@@ -100,7 +100,7 @@ module control_unit (
 
   always_comb begin : REG_EN_CONTROLS
     if((cuif.opcode == RTYPE && cuif.opcode != JR) || cuif.opcode == JAL || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == SLTI || cuif.opcode == SLTIU || cuif.opcode == SW || cuif.opcode == SW || cuif.opcode == XORI) begin
-       cuif.RegWr = 1;
+       cuif.RegWr = 1 & !(cuif.instruction == '0);
     end else begin
        //default, no write
        cuif.RegWr = 0;

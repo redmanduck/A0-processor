@@ -50,6 +50,9 @@ module pl_ex_mem(
         M_MemRead <= 0;
         pcn <= '0;
         M_MemWrite <= 0;
+        WB_RegWrite <= '0;
+        M_Branch <= '0;
+        halt <= '0;
      end else if (!xmem.flush && xmem.WEN == 1'b1) begin
         WB_MemToReg <= xmem.WB_MemToReg_in;
         pcn <= xmem.pcn_in;

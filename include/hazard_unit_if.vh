@@ -8,10 +8,12 @@ interface hazard_unit_if;
    logic branch, branch_neq, pc_en, is_equal, take_branch;
    logic jump;
    logic dhit;
+   logic mwb_rd;
+   logic idex_rs;
    modport hzu(
      output stall_ifid, stall_xmem, stall_idex, stall_wb, flush_ifid, flush_xmem,
 flush_idex, flush_wb, pc_en,
-     input dhit, jump, branch_neq, branch, is_equal
+     input dhit,mwb_rd, idex_rs, jump, branch_neq, branch, is_equal
    );
 endinterface
 `endif

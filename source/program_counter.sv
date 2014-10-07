@@ -33,9 +33,6 @@ module program_counter (
    //TODO: move all these outside
 
    always_comb begin : PC_ns_logic
-      if(!pcif.pc_en) begin
-       PC_next = PC;
-      end else begin
         PC_next = PC + 4;
         casez (pcif.PCSrc)
               0: begin
@@ -57,7 +54,6 @@ module program_counter (
               end
               default: PC_next = PC + 4;
           endcase
-      end
    end
 
    always_ff @ (posedge CLK, negedge nRST) begin : PC_update_logic

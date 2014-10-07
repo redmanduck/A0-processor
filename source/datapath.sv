@@ -48,6 +48,7 @@ module datapath (
   logic alu_vf;
   word_t alu_output;
   logic alu_zf;
+  word_t fwd_rdat1, fwd_rdat2;
 
   logic stall;
 
@@ -83,11 +84,12 @@ module datapath (
 
   assign fwif.ex_rs = idex.rs_out;
   assign fwif.ex_rt = idex.rt_out;
-  assign fwif.mem_rd  = xmem.reg_instr_out;
-  assign fwif.wb_rd = xmem.reg_instr_out; //reg_instr is rd
-  assign fwif.regWr = mweb.WB_RegWrite_out;//cuif.RegWr;
+  assign fwif.mem_rd  = xmem.reg_instr_out; //why is mem_rd and wb_rd coming from same place
+  assign fwif.wb_rd = xmem.reg_instr_out; //why do you call this wb_rd if its comming from xmem 
+  assign fwif.regWr = mweb.WB_RegWrite_out || xmem.WB_RegWrite_out;//cuif.RegWr;
   assign fwif.regRd = 1'b1;
   assign fwif.memWr = idex.M_MemWrite_out;
+  assign fwif.memRegWr = xmem.WB_RegWrite_out;
   assign xmem.alu_output_in = alu_output;
   //PIPELINED
   assign rfif.rsel1 = cuif.rs;
@@ -96,7 +98,7 @@ module datapath (
 
   assign ifid.flush = hzif.flush_ifid;
   assign idex.flush = hzif.flush_idex;
-  assign xmem.flush = 0;
+  assign xmem.flush = hzif.flush_xmem;
   assign mweb.flush = 0;
 
   //PIPELINED rfif wdat
@@ -108,8 +110,9 @@ module datapath (
     endcase
   end
   assign rfif.wdat = writeback;
+
   always_comb begin : MUX_RGDST
-    casez (idex.EX_RegDst_out) //TODO: this looks wrong , try xmem.EX_RegDst_out
+    casez (idex.EX_RegDst_out) 
       1: xmem.reg_instr_in = idex.rd_out;
       2: xmem.reg_instr_in = 31; //JAL
       default: xmem.reg_instr_in = idex.rt_out;
@@ -120,7 +123,7 @@ module datapath (
   assign dpif.dmemWEN = xmem.M_MemWrite_out;
 
   assign dpif.imemREN = 1'b1;//rqif.imemREN;
-  assign dpif.dmemstore = xmem.regfile_rdat2_out;
+  assign dpif.dmemstore = xmem.regfile_rdat2_out; //;  //strange
   assign dpif.dmemaddr = xmem.alu_output_out;
 
   assign pcif.ihit = ihit; //not used TODO:remove
@@ -155,7 +158,7 @@ module datapath (
        if(idex.EX_ALUSrc_out == 0) begin
           alu_b = idex.rdat2_out;
        end else if (idex.EX_ALUSrc_out == 2) begin
-          alu_b = {idex.immediate_out, 16'b0};
+          alu_b = {idex.immediate_out, 16'b0}; //ok
        end else begin
           alu_b = shamt_extended;
        end
@@ -194,7 +197,7 @@ module datapath (
       if(!nRST) begin
            ifid.WEN <= 1;
       end else begin
-           ifid.WEN <= !stall;
+           ifid.WEN <= !(stall && hzif.stall_ifid);
       end
   end
   always_ff @(posedge CLK, negedge nRST) begin
@@ -218,12 +221,18 @@ module datapath (
            mweb.WEN <= !stall;
       end
   end
-
+  
+  assign fwif.id_rt = idex.rt_out;
+  assign fwif.id_rs = idex.rs_out;
+  assign fwd_rdat1 = (fwif.forwardR1 ? xmem.alu_output_out : rfif.rdat1);
+  assign fwd_rdat2 = (fwif.forwardR2 ? xmem.alu_output_out : rfif.rdat2);
+  logic reg_equal;
+  assign reg_equal = ((fwd_rdat1 - fwd_rdat2) == 0 ? 1 : 0);
   //TODO: move this to decode stage!!! IMPORTANT
   //mux in datapath to do stuff  ^umm what?
   always_comb begin
-     if(idex.M_Branch_out && alu_zf) begin
-        pcif.PCSrc = 2;
+     if(cuif.Branch && reg_equal || cuif.BranchNEQ && !reg_equal) begin //idex.M_branch_out
+        pcif.PCSrc = 2; //jump
      end else begin
         pcif.PCSrc = cuif.PCSrc;
      end
@@ -234,8 +243,10 @@ module datapath (
    assign hzif.branch = cuif.Branch;
    assign hzif.branch_neq = cuif.BranchNEQ;
    //this signal tells the HZU that we are going to take this branch
-   assign hzif.is_equal = ((rfif.rdat1 - rfif.rdat2) == 0);
+   assign hzif.is_equal = reg_equal;
    assign hzif.dhit = dpif.dhit;
+   assign hzif.idex_rs = idex.rs_out;
+   assign hzif.mwb_rd = mweb.reg_instr_out;
    /*
     PIPELINE LATCHES connections
   */

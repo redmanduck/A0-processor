@@ -4,8 +4,7 @@
 
 `include "forward_unit_if.vh"
 
-module forward_unit(forward_unit_if.fwu fw_if
-);
+module forward_unit(forward_unit_if.fwu fw_if);
 
 
 // forwardA choose right value to forward for operend A
@@ -17,5 +16,8 @@ assign fw_if.forwardB =(!fw_if.memWr) && (fw_if.regWr && fw_if.regRd) && ((fw_if
 //TODO: why I compare rs and rt? I may use it for avoiding forward when branch is taken
 
 assign fw_if.forwardData = (fw_if.memWr) && ((fw_if.mem_rd == fw_if.ex_rt) ? 1 :((fw_if.wb_rd == fw_if.ex_rt) ? 1 : 0));
+
+assign fw_if.forwardR1 = fw_if.memRegWr ? (fw_if.id_rs == fw_if.mem_rd ? 1 : 0) : 0;
+assign fw_if.forwardR2 = fw_if.memRegWr ? (fw_if.id_rt == fw_if.mem_rd ? 1 : 0) : 0;
 
 endmodule
