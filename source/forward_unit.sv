@@ -85,11 +85,14 @@ end
 /*
 	R1 is dependent on RTYPE-ness 9or I TYPE) ex_RegDst
 */
-always_comb begin : forwardR1 
+always_comb begin : forwardR1
     fw_if.forwardR1 = 0;
     if(fw_if.memRegWr == 1) begin
     	if((fw_if.ex_RegDst == 1) && (fw_if.id_rs == fw_if.mem_rd) && (fw_if.id_rs != 0))begin
     		fw_if.forwardR1 = 1;
+    	end else if((fw_if.ex_RegDst == 1) && (fw_if.id_rs == fw_if.ex_rd) && (fw_if.id_rs != 0))begin
+    		//compare beq and some rtype before it (decode-EX stage)
+    		fw_if.forwardR1 = 3;
     	end else if((fw_if.ex_RegDst == 0) && (fw_if.id_rs == fw_if.mem_rd)) begin
     		fw_if.forwardR1 = 2;
     	end else begin
@@ -110,7 +113,7 @@ always_comb begin : forwardR2
  			fw_if.forwardR2 = 3;
  		end
 	end else begin
-		fwif.forwardR2 = 0;
+		fw_if.forwardR2 = 0;
 	end
 end
 endmodule

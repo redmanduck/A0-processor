@@ -17,6 +17,8 @@ addu $19, $17, $19
 addiu $18, $18, -1 # decrement loop
 j mloop
 mult_done:
-push $19
+addiu $sp, $sp, -4
+sw    $19, 0($sp)
+#push $19
 addiu $31, $19, 0
 halt

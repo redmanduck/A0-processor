@@ -102,7 +102,6 @@ module datapath (
   assign rfif.rsel2 = cuif.rt;
   assign rfif.WEN = mweb.WB_RegWrite_out;
 
-  assign ifid.flush = hzif.flush_ifid;
   assign idex.flush = hzif.flush_idex;
   assign xmem.flush = hzif.flush_xmem;
   assign mweb.flush = 0;
@@ -138,7 +137,18 @@ module datapath (
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
+
+  /*
+    Note:  pcif.bubble = (cuif.instruction == 0  && (xmem.M_Branch_out) ? 1 : 0);
+    		 will work for mult
+    		
+  */
+  assign pcif.bubble = (cuif.instruction == 0  && (idex.M_Branch_out) ? 1 : 0);
+
   assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit
+ 
+  assign idex.M_Jump_in = cuif.Jump;
+
  //mweb-> cuif.halt
   //assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
@@ -198,13 +208,26 @@ module datapath (
        when stall is asserted.
     -- stall when there is a pending memory operation
   */
+  logic special_ifid_flush;
+  always_comb begin
+    if ((ifid.pcn_out == pcif.pc_plus_4) && (pcif.pc_plus_4 != 0)) begin
+      special_ifid_flush = 1;
+    end else begin
+      special_ifid_flush = 0;
+    end
+  end
+  assign ifid.flush = hzif.flush_ifid || special_ifid_flush;
+  assign idex.bubble_in = ifid.flushed_out;
+  //logic test;
+  //assign test = (!pcif.pc_en ? 1 : (idex.bubble_out ? 0 : 1));
+  //assign test = (idex.bubble_out ? !pcif.pc_en : 1);
 
   assign stall = (dpif.dmemREN || dpif.dmemWEN ? (!dpif.dhit) : 0);
   always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
            ifid.WEN <= 1;
       end else begin
-           ifid.WEN <= !(stall && hzif.stall_ifid);
+           ifid.WEN <= (!(stall && hzif.stall_ifid));
       end
   end
   always_ff @(posedge CLK, negedge nRST) begin
@@ -232,7 +255,7 @@ module datapath (
   assign fwif.id_rt = cuif.rt;
   assign fwif.id_rs = cuif.rs;
  // assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : rfif.rdat1); //incomplete
-   assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : (fwif.forwardR1 == 2 ? dpif.dmemload : (fwif.forwardR1 == 3 ? writeback : rfif.rdat1)));
+   assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : (fwif.forwardR1 == 2 ? dpif.dmemload : (fwif.forwardR1 == 3 ? alu_output : rfif.rdat1)));
 
  // assign fwd_rdat2 = (fwif.forwardR2 == 1 ? xmem.alu_output_out : (fwif.forwardR2 == 2 ? alu_output : (fwif.forwardR2 == 3 ? mweb.alu_output_out : (fwif.forwardR2 == 4 ? xmem.pcn_out : rfif.rdat2))));
   assign fwd_rdat2 = (fwif.forwardR2 == 1 ? xmem.alu_output_out : (fwif.forwardR2 == 2 ? alu_output : (fwif.forwardR2 == 3 ? writeback : (fwif.forwardR2 == 4 ? xmem.pcn_out : rfif.rdat2))));
@@ -241,6 +264,7 @@ module datapath (
   assign reg_equal = ((fwd_rdat1 - fwd_rdat2) == 0 ? 1 : 0);
   //TODO: move this to decode stage!!! IMPORTANT
   //mux in datapath to do stuff  ^umm what?
+  
   always_comb begin
      if(cuif.Branch && reg_equal || cuif.BranchNEQ && !reg_equal) begin //idex.M_branch_out
         pcif.PCSrc = 2; //jump

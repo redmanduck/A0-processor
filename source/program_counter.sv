@@ -17,7 +17,7 @@ module program_counter (
 
    //TODO: make interface for pc
    import cpu_types_pkg::*;
-   word_t PC_next;
+   word_t PC_next, PC_next_filtered;
    word_t PC;
    word_t pc_4;
 
@@ -31,6 +31,14 @@ module program_counter (
    //Resolved: ----------- Increase on dhit: ctr_dWEN | ctr_dREN
 
    //TODO: move all these outside
+
+   always_ff @ (posedge CLK, negedge nRST) begin
+      if(!nRST) begin
+        PC_next_filtered <= 0;
+      end else begin
+        PC_next_filtered <= PC_next;
+      end
+   end
 
    always_comb begin : PC_ns_logic
         PC_next = PC + 4;
@@ -49,8 +57,8 @@ module program_counter (
                  if(pcif.immediate[15] == 0) begin
                     PC_next = (PC + 0) + {14'b0, pcif.immediate, 2'b0}; //TODO : ask pranav
                   end else begin
-                    //PC_next = (PC + 0) + {14'h3fff, pcif.immediate, 2'b0}; //TODO : ask pranav
-                    PC_next = PC + $signed({pcif.immediate, 2'b0});
+                    PC_next = (PC + 0) + {14'h3fff, pcif.immediate, 2'b0}; //TODO : ask pranav
+                    //PC_next = PC + $signed({pcif.immediate, 2'b0});
                   end
               end
               default: PC_next = PC + 4;
@@ -61,7 +69,7 @@ module program_counter (
     if(!nRST) begin
       PC <= PC_INIT;
     end else if (pcif.pc_en) begin
-      PC <= PC_next;
+      PC <= (pcif.bubble == 1 ? PC_next_filtered : PC_next);
     end else begin
       PC <= PC;
     end

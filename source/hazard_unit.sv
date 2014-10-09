@@ -31,8 +31,8 @@ module hazard_unit(
        // hzif.pc_en = 0;
         hzif.stall_ifid = 1;
      end
-
   end
+
 
 //  assign hzif.flush_ifid = (hzif.jump || (hzif.branch && hzif.is_equal) || (hzif.branch_neq && !hzif.is_equal)) ? 1 : hzif.dhit;
 

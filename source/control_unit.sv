@@ -67,6 +67,7 @@ module control_unit (
     cuif.Jump = 1'b0;
     cuif.Branch = 1'b0;
     cuif.BranchNEQ = 1'b0;
+    cuif.PCSrc = 4;
     if(cuif.opcode == RTYPE && cuif.funct == JR) begin
        cuif.PCSrc = 0; //read Rs
        cuif.Jump = 1'b1;
@@ -74,11 +75,11 @@ module control_unit (
        cuif.PCSrc = 1; //Link for JAL occur above
        cuif.Jump = 1'b1;
     end else if(cuif.opcode == BEQ) begin
-     // cuif.PCSrc = 2; //move this to datapath mux
+    //   cuif.PCSrc = cuif.PCSrc; //move this to datapath mux
        cuif.Jump = 1'b0;
        cuif.Branch = 1'b1;
     end else if(cuif.opcode == BNE) begin
-     //  cuif.PCSrc = 2;
+  //     cuif.PCSrc = cuif.PCSrc;
        cuif.BranchNEQ = 1'b1;
     end else begin
        cuif.PCSrc = 4; //normal mode otherwise

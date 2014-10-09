@@ -1,2 +1,3 @@
 org 0x0000
 lui $15, 0xABAB
+halt

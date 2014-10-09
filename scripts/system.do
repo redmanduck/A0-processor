@@ -52,6 +52,7 @@ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/ifid/WEN
 add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/fwd_rdat1
 add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/fwd_rdat2
 add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/ifid/flush
+add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/special_ifid_WEN
 add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/CLK
 add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/pcn
 add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/nRST
@@ -176,7 +177,7 @@ add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/WB_MemToReg
 add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/reg_instr
 add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/halt
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {376281 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1080000 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 231
 configure wave -valuecolwidth 101
@@ -192,4 +193,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {1014380 ps}
+WaveRestoreZoom {912942 ps} {1927322 ps}

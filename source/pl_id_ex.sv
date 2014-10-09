@@ -12,7 +12,7 @@ module pl_id_ex(
    logic WB_RegWrite;
 
    //MEM control regs (TODO: jump?)
-   logic M_Branch, M_MemRead, M_MemWrite;
+   logic M_Branch,M_Jump, M_MemRead, M_MemWrite;
 
    //EX control signals
    logic [1:0] EX_RegDst, EX_ALUSrc, EX_ALUSrc2;
@@ -29,7 +29,9 @@ module pl_id_ex(
    word_t immediate;
    logic halt;
    word_t pcn;
+   logic bubble;
 
+   assign idex.M_Jump_out = M_Jump;
    assign idex.pcn_out = pcn;
    assign idex.WB_MemToReg_out = WB_MemToReg;
    assign idex.WB_RegWrite_out = WB_RegWrite;
@@ -51,6 +53,7 @@ module pl_id_ex(
    assign idex.immediate26_out = immediate26;
    assign idex.immediate_out = immediate;
    assign idex.halt_out = halt;
+   assign idex.bubble_out = bubble;
 
    //nothing to flush
    always_ff @(posedge CLK, negedge nRST) begin
@@ -62,6 +65,7 @@ module pl_id_ex(
          M_MemRead <= '0;
          M_MemWrite <= '0;
          EX_RegDst <= '0;
+         bubble <= '0;
          EX_ALUOp <= ALU_ADD;
          EX_ALUSrc <= '0;
          EX_ALUSrc2 <= '0;
@@ -78,6 +82,7 @@ module pl_id_ex(
          shamt <= '0;
       end else if(idex.flush) begin
         WB_MemToReg <= '0;
+        bubble <= '0;
         WB_RegWrite <= '0;
         M_Branch <= '0;
         pcn <= '0;
@@ -89,9 +94,11 @@ module pl_id_ex(
          halt <= idex.halt_in;
          pcn <= idex.pcn_in;
          shamt <= idex.shamt_in;
+         bubble <= idex.bubble_in;
          M_Branch <= idex.M_Branch_in;
          M_MemRead <= idex.M_MemRead_in;
          M_MemWrite <= idex.M_MemWrite_in;
+         M_Jump <= idex.M_Jump_in;
          EX_RegDst <= idex.EX_RegDst_in;
          EX_ALUOp <= idex.EX_ALUOp_in;
          EX_ALUSrc <= idex.EX_ALUSrc_in;
