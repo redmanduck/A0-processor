@@ -73,8 +73,8 @@ always_comb begin : proc_forwarddata
 	if(fw_if.memWr) begin
 		if((fw_if.mem_rd == fw_if.ex_rt) && fw_if.memRegWr) begin
 			fw_if.forwardData = 1;
-		end else if ((fw_if.wb_rd == fw_if.ex_rt) && fw_if.wbRegWr) begin
-			fw_if.forwardData = 1;
+/*		end else if ((fw_if.wb_rd == fw_if.ex_rt) && fw_if.wbRegWr) begin
+			fw_if.forwardData = 1;*/
 		end else begin
 			fw_if.forwardData = 0;
 		end

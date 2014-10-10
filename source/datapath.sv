@@ -93,7 +93,7 @@ module datapath (
   assign fwif.regRd = 1'b1;
   assign fwif.memWr = idex.M_MemWrite_out;
   assign fwif.memRegWr = xmem.WB_RegWrite_out;
-  assign fwif.exRegWr = idex.WB_RegWrite_out; 
+  assign fwif.exRegWr = idex.WB_RegWrite_out;
   assign fwif.exMemWr = idex.M_MemWrite_out;//cuif.MemWr;
 
   assign xmem.alu_output_in = alu_output;
@@ -117,7 +117,7 @@ module datapath (
   assign rfif.wdat = writeback;
 
   always_comb begin : MUX_RGDST
-    casez (idex.EX_RegDst_out) 
+    casez (idex.EX_RegDst_out)
       1: xmem.reg_instr_in = idex.rd_out;
       2: xmem.reg_instr_in = 31; //JAL
       default: xmem.reg_instr_in = idex.rt_out;
@@ -141,12 +141,12 @@ module datapath (
   /*
     Note:  pcif.bubble = (cuif.instruction == 0  && (xmem.M_Branch_out) ? 1 : 0);
     		 will work for mult
-    		
+
   */
   assign pcif.bubble = (cuif.instruction == 0  && (idex.M_Branch_out) ? 1 : 0);
 
   assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit
- 
+
   assign idex.M_Jump_in = cuif.Jump;
 
  //mweb-> cuif.halt
@@ -216,18 +216,44 @@ module datapath (
       special_ifid_flush = 0;
     end
   end
+
+  /*
+        Special Double Garbage Detector
+   */
+  word_t previous_pc4;
+  logic special_ifid_stall;
+  always_ff @(posedge CLK, negedge nRST) begin
+     if(!nRST) begin
+        previous_pc4 <= 0;
+     end else begin
+        previous_pc4 <= pcif.pc_plus_4;
+     end
+  end
+
+ // if (previous_pc4 == pcif.pc_plus_4  && cuif.PCSrc == 1  && cuif.instruction
+ // == 0)
+  always_comb begin
+    if((previous_pc4 == pcif.pc_plus_4) && (pcif.PCSrc == 1) &&
+(cuif.instruction == 0)) begin
+       special_ifid_stall = 1;
+    end else begin
+       special_ifid_stall = 0;
+    end
+  end
+
+
   assign ifid.flush = hzif.flush_ifid || special_ifid_flush;
   assign idex.bubble_in = ifid.flushed_out;
   //logic test;
   //assign test = (!pcif.pc_en ? 1 : (idex.bubble_out ? 0 : 1));
   //assign test = (idex.bubble_out ? !pcif.pc_en : 1);
-
+  //assign ifid.WEN = !stall && dpif.ihit && !hzif.stall_ifid;
   assign stall = (dpif.dmemREN || dpif.dmemWEN ? (!dpif.dhit) : 0);
   always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
            ifid.WEN <= 1;
       end else begin
-           ifid.WEN <= (!(stall && hzif.stall_ifid));
+           ifid.WEN <= (!(stall && hzif.stall_ifid)) & !special_ifid_stall;
       end
   end
   always_ff @(posedge CLK, negedge nRST) begin
@@ -251,7 +277,7 @@ module datapath (
            mweb.WEN <= !stall;
       end
   end
-  
+
   assign fwif.id_rt = cuif.rt;
   assign fwif.id_rs = cuif.rs;
  // assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : rfif.rdat1); //incomplete
@@ -264,7 +290,7 @@ module datapath (
   assign reg_equal = ((fwd_rdat1 - fwd_rdat2) == 0 ? 1 : 0);
   //TODO: move this to decode stage!!! IMPORTANT
   //mux in datapath to do stuff  ^umm what?
-  
+
   always_comb begin
      if(cuif.Branch && reg_equal || cuif.BranchNEQ && !reg_equal) begin //idex.M_branch_out
         pcif.PCSrc = 2; //jump
