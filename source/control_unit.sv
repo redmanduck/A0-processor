@@ -7,7 +7,6 @@
 
 //TODO: remove nRST and CLK from control unit
 module control_unit (
-   input CLK, nRST,
    control_unit_if.control cuif
 );
 
@@ -53,17 +52,16 @@ module control_unit (
     endcase
   end
 
-  always_ff @ (posedge CLK, negedge nRST) begin
-     if(!nRST) begin
-       cuif.halt = 0;
-     end else if(cuif.opcode == HALT) begin
+   always_comb begin : HALT_LOGIC
+     if(cuif.opcode == HALT) begin
        cuif.halt = 1;
      end else begin
        cuif.halt = 0;
      end
   end
 
-  always_comb begin : PC_CONTROLS
+
+   always_comb begin : PC_CONTROLS
     cuif.Jump = 1'b0;
     cuif.Branch = 1'b0;
     cuif.BranchNEQ = 1'b0;

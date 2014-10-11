@@ -60,7 +60,7 @@ module datapath (
   pl_id_ex IDEX(CLK, nRST, idex);
   pl_ex_mem EXMEM(CLK, nRST, xmem);
   pl_mem_wb MEMWB(CLK, nRST, mweb);
-  control_unit CU(CLK, nRST, cuif);
+  control_unit CU(cuif);
   register_file RF(CLK, nRST, rfif);
   program_counter PC(CLK, nRST, pcif);
   forward_unit FWU(fwif);
@@ -138,11 +138,6 @@ module datapath (
   assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
 
-  /*
-    Note:  pcif.bubble = (cuif.instruction == 0  && (xmem.M_Branch_out) ? 1 : 0);
-    		 will work for mult
-
-  */
   assign pcif.bubble = (cuif.instruction == 0  && (idex.M_Branch_out) ? 1 : 0);
 
   assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit
