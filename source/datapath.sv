@@ -29,7 +29,6 @@ module datapath (
 
   control_unit_if cuif();
   register_file_if rfif();
-//  ru_cu_if rqif();
   pc_if pcif();
   pipereg_if_id ifid();
   pipereg_id_ex idex();
@@ -134,28 +133,24 @@ module datapath (
 
   assign pcif.ihit = ihit; //not used TODO:remove
   assign pcif.dhit = dhit; //not used
+
   assign pcif.immediate26 = cuif.immediate26;
   assign pcif.immediate = cuif.immediate;
   assign pcif.rdat1 = rfif.rdat1;
-
+  assign pcif.branch_addr = ifid.pcn_out + {14'b0, pcif.immediate, 2'b0};//(cuif.immediate << 2);
   assign pcif.bubble = (cuif.instruction == 0  && (idex.M_Branch_out) ? 1 : 0);
-
-  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit
+  assign pcif.pc_en = hzif.pc_en & (cuif.Branch || cuif.BranchNEQ || (nRST & !cuif.halt & dpif.ihit & !dpif.dhit)); //dhit
 
   assign idex.M_Jump_in = cuif.Jump;
 
- //mweb-> cuif.halt
-  //assign pcif.PCSrc =  cuif.PCSrc;
   assign dpif.imemaddr = pcif.imemaddr;
 
   assign cuif.instruction = ifid.instruction_out;
   assign cuif.alu_zf = alu_zf; //change this..... latch
 
-  //PIPELINED
   assign alu_op = idex.EX_ALUOp_out;//cuif.ALUctr;
   assign alu_a = idex.rdat1_out;//rfif.rdat1;
 
-  //PIPELINED
   word_t shamt_extended;
 
   always_comb begin : MUX_ALU_B2
@@ -187,8 +182,6 @@ module datapath (
  end
 
   //PIPELINED Data memory  (MEM stage)
-  //Dcache
-//  always_comb
   assign idex.immediate26_in = cuif.immediate26;
   assign idex.rt_in = cuif.rt;
   assign idex.rd_in = cuif.rd;
@@ -236,18 +229,15 @@ module datapath (
     end
   end
 
-
-  assign ifid.flush = hzif.flush_ifid || special_ifid_flush;
+  assign hzif.halt = cuif.halt;
+  assign ifid.flush = hzif.flush_ifid;// || special_ifid_flush;
   assign idex.bubble_in = ifid.flushed_out;
-  //logic test;
-  //assign test = (!pcif.pc_en ? 1 : (idex.bubble_out ? 0 : 1));
-  //assign test = (idex.bubble_out ? !pcif.pc_en : 1);
-  //assign ifid.WEN = !stall && dpif.ihit && !hzif.stall_ifid;
   assign stall = (dpif.dmemREN || dpif.dmemWEN ? (!dpif.dhit) : 0);
   always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
            ifid.WEN <= 1;
       end else begin
+           //and ihit?
            ifid.WEN <= (!(stall && hzif.stall_ifid)) & !special_ifid_stall;
       end
   end
@@ -303,14 +293,9 @@ module datapath (
    assign hzif.dhit = ((dpif.dmemREN || dpif.dmemWEN) ? dpif.dhit :  0);
    assign hzif.idex_rs = idex.rs_out;
    assign hzif.mwb_rd = mweb.reg_instr_out;
-   /*
-    PIPELINE LATCHES connections
-  */
+   assign ifid.instruction_in = dpif.imemload;
+   assign ifid.next_address_in = pcif.pc_plus_4;
 
-  assign ifid.instruction_in = dpif.imemload;
-  assign ifid.next_address_in = pcif.pc_plus_4;
-
-//  assign idex.rs_in
   assign idex.shamt_in = cuif.shamt;
   assign idex.next_address_in = pcif.pc_plus_4;
   assign idex.WB_MemToReg_in = cuif.MemToReg;
@@ -337,7 +322,6 @@ module datapath (
 
   assign xmem.M_MemWrite_in = idex.M_MemWrite_out;
 
-  //assign xmem.regfile_rdat2_in = idex.rdat2_out;//alu_b_fwd;//idex.rdat2_out;
   assign xmem.regfile_rdat2_in = (fwif.forwardData ? xmem.alu_output_out : idex.rdat2_out);
 
   assign xmem.alu_zero_in = alu_zf;

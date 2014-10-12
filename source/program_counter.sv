@@ -27,10 +27,27 @@ module program_counter (
 
    assign pcif.imemaddr = PC;
    assign pcif.pc_plus_4 = pc_4;
+
+   always_ff @ (posedge CLK, negedge nRST) begin
+      PC <= PC;
+      if(!nRST) begin
+         PC <= PC_INIT;
+      end else if (pcif.pc_en) begin
+        casez (pcif.PCSrc)
+          0: PC <= pcif.rdat1;                    //JR
+          1: PC <= pcif.immediate26 << 2;         //JUMP
+          2: PC <= pcif.branch_addr;              //{14'b0, pcif.immediate, 2'b0} + PC + 4; //BNE, BEQ
+          default: PC <= pc_4;                          //REGULAR
+        endcase
+      end
+      $display("Set PC %h", PC);
+  end
+/*
+   logic [25:0] sync_imm26;
+   logic [25:0] effective_imm26;
+
    //Resolved: ----------- Increase on ihit: otherwise
    //Resolved: ----------- Increase on dhit: ctr_dWEN | ctr_dREN
-
-   //TODO: move all these outside
 
    always_ff @ (posedge CLK, negedge nRST) begin
       if(!nRST) begin
@@ -39,6 +56,16 @@ module program_counter (
         PC_next_filtered <= PC_next;
       end
    end
+
+   always_ff @ (posedge CLK, negedge nRST) begin
+      if(!nRST) begin
+       sync_imm26 <= '0;
+      end else begin
+       sync_imm26 <= pcif.immediate26;
+      end
+   end
+
+   assign effective_imm26 = ( pcif.immediate26 == 0 ? sync_imm26 : pcif.immediate26);
 
    always_comb begin : PC_ns_logic
         PC_next = PC + 4;
@@ -50,7 +77,7 @@ module program_counter (
               1: begin
                  //J or JAL
                  //Resolved: put in $31 for JAL
-                 PC_next = { pc_4[31:28] , pcif.immediate26, 2'b0 };
+                 PC_next = { pc_4[31:28] , effective_imm26, 2'b0 };
               end
               2: begin
                  //BEQ/BNE
@@ -74,4 +101,6 @@ module program_counter (
       PC <= PC;
     end
   end
+*/
+
 endmodule

@@ -20,9 +20,9 @@ interface pc_if;
   logic bubble;
   word_t imemaddr;
   word_t pc_plus_4;
-
+  word_t branch_addr;
   modport pc(
-    input ihit, dhit, immediate, immediate26, rdat1, pc_en, PCSrc, bubble,
+    input ihit, dhit, branch_addr, immediate, immediate26, rdat1, pc_en, PCSrc, bubble,
     output imemaddr, pc_plus_4
   );
 

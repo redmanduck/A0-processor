@@ -10,7 +10,8 @@ interface control_unit_if;
   //the instruction
   word_t instruction;
   //out to somewhere
-  logic [5:0] opcode, funct;
+  funct_t funct;
+  opcode_t opcode;
   logic [4:0] rs, rt, rd, shamt;
   logic [15:0] immediate;
   logic [25:0] immediate26;

@@ -14,7 +14,7 @@ module hazard_unit(
      hzif.stall_xmem = 0;
      hzif.stall_wb = 0;
 
-     hzif.flush_ifid = hzif.dhit;
+     hzif.flush_ifid = hzif.dhit & !hzif.halt;// hzif.dhit;
      hzif.flush_idex = 0;
      hzif.flush_xmem = 0;
      hzif.flush_wb = 0;

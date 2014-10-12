@@ -91,8 +91,10 @@ always_comb begin : forwardR1
     	if((fw_if.ex_RegDst == 1) && (fw_if.id_rs == fw_if.mem_rd) && (fw_if.id_rs != 0))begin
     		fw_if.forwardR1 = 1;
     	end else if((fw_if.ex_RegDst == 1) && (fw_if.id_rs == fw_if.ex_rd) && (fw_if.id_rs != 0))begin
-    		//compare beq and some rtype before it (decode-EX stage)
+    		//compare beq and some r/i type before it (decode-EX stage)
     		fw_if.forwardR1 = 3;
+      end else if((fw_if.ex_RegDst == 0) && (fw_if.id_rs == fw_if.ex_rt)) begin
+        fw_if.forwardR1 = 3;
     	end else if((fw_if.ex_RegDst == 0) && (fw_if.id_rs == fw_if.mem_rd)) begin
     		fw_if.forwardR1 = 2;
     	end else begin
@@ -104,16 +106,19 @@ end
 
 always_comb begin : forwardR2
 	fw_if.forwardR2 = 0;
-	if(fw_if.memRegWr || fw_if.exMemWr) begin
+	if(fw_if.memRegWr || fw_if.exRegWr || fw_if.exMemWr) begin
  		if(fw_if.id_rt == fw_if.mem_rd) begin
  			fw_if.forwardR2 = 1;
  		end else if(fw_if.id_rt == fw_if.ex_rd && fw_if.ex_rd != 0) begin
  			fw_if.forwardR2 = 2;
  		end else if(fw_if.id_rt == fw_if.wb_rd && fw_if.wb_rd != 0) begin
  			fw_if.forwardR2 = 3;
- 		end
+ 		end else if(fw_if.id_rt == fw_if.ex_rt && fw_if.ex_RegDst == 0) begin
+      fw_if.forwardR2 = 3;
+    end
 	end else begin
 		fw_if.forwardR2 = 0;
 	end
 end
+
 endmodule

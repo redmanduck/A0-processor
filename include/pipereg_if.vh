@@ -51,10 +51,11 @@ interface pipereg_if_id;
    logic flushed_out, flushed_in;
    word_t next_address_out, instruction_out, next_address_in, instruction_in;
    word_t pcn_out, pcn_in;
+   word_t branch_addr_in, branch_addr_out;
 
   modport ifid(
-     input pcn_in, WEN, flush, next_address_in, instruction_in,flushed_in ,
-     output pcn_out, next_address_out, instruction_out, flushed_out
+     input pcn_in, WEN, branch_addr_in, flush, next_address_in, instruction_in,flushed_in ,
+     output pcn_out, next_address_out, branch_addr_out, instruction_out, flushed_out
   );
 endinterface
 

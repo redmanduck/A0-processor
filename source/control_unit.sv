@@ -14,27 +14,24 @@ module control_unit (
 
   //technically imemload will connect to instr
 
-  assign cuif.opcode = cuif.instruction[31:26];
+  assign cuif.opcode = opcode_t'(cuif.instruction[31:26]);
+  assign cuif.funct = funct_t'(cuif.instruction[5:0]);
+  assign cuif.immediate = cuif.instruction[15:0];
+  assign cuif.immediate26 = cuif.instruction[25:0];
+
   assign cuif.rs = cuif.instruction[25:21];
   assign cuif.rt = cuif.instruction[20:16];
   assign cuif.rd = cuif.instruction[15:11];
   assign cuif.shamt = cuif.instruction[10:6];
-  assign cuif.funct = cuif.instruction[5:0];
-  assign cuif.immediate = cuif.instruction[15:0];
-  assign cuif.immediate26 = cuif.instruction[25:0];
 
   assign cuif.MemWr = (cuif.opcode == SW ? 1 : 0);
   assign cuif.MemRead = (cuif.opcode == LW || cuif.opcode == LUI ? 1 : 0);
 
   assign cuif.iREN = (cuif.opcode != HALT);
 
-  //use dREN and dWEN as RAM arbiter request signal to Cache (or RAM)
   assign cuif.dREN = (cuif.MemToReg == 2'b1 ? 1 : 0);
   assign cuif.dWEN = cuif.MemWr;
 
-/*
-  assign cuif.RegDst = (cuif.opcode == XORI || cuif.opcode == LW || cuif.opcode == ORI || cuif.opcode == ADDIU || cuif.opcode == ANDI || cuif.opcode == LUI || cuif.opcode == LW || cuif.opcode == SLTI || cuif.opcode == SLTIU ? 0 : 1 ); //RTYPE
-*/
  always_comb begin : REGDST
     casez(cuif.opcode)
       XORI, LW, ORI, ADDIU, ANDI, LUI, LW, SLTI, SLTIU: cuif.RegDst = 2'b00;
