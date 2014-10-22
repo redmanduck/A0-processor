@@ -23,12 +23,13 @@ module icache (
   
   TwoWayTable [total_set - 1:0] dtable;
 
-  typedef enum xxx {idle, fetch} StateType;
+  typedef enum logic [1:2] {idle, fetch} StateType;
 
   StateType state, next_state;
 
   logic [25:0] rq_tag;
   logic [3:0] rq_index;
+  
   //requested index and tag
   assign rq_index = dpif.imemaddr[5:2];
   assign rq_tag = dpif.imemaddr[31:6];
