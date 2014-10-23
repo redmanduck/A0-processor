@@ -80,7 +80,9 @@ int unsigned cycles;
       // load_word(32'h00000400); //hit, loading into same set, must pick last usedto replace
       // #(2*PERIOD);
 
-      store_word(32'hF8, 32'hBEEF); //hit, storing over old value (should makeit dirty)
+      store_word(32'h08, 32'hBEEFDEAD);  //write to address that hit
+ //     store_word(32'hF8, 32'hBEEF);  //write to address that miss
+
       #PERIOD;
 
       // store_word(32'h08, 32'hDED2); //miss
@@ -125,10 +127,10 @@ int unsigned cycles;
       input [31:0] address;
       input [31:0] data;
       begin
-   dcif.dmemaddr = address;
-   dcif.dmemREN = 0;
-   dcif.dmemWEN = 1;
-   dcif.dmemstore = data;
+      dcif.dmemaddr = address;
+      dcif.dmemREN = 0;
+      dcif.dmemWEN = 1;
+      dcif.dmemstore = data;
 
    for (i=0; i < 32; i++) begin
       if (dcif.dhit == 1) begin
