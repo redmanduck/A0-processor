@@ -26,7 +26,7 @@ datapath_cache_if dcif ();
 cache_control_if ccif ();
 cpu_ram_if ramif();
 
-ram #(.LAT(10)) CPURAM  (CLK, nRST, ramif);
+ram #(.LAT(0)) CPURAM  (CLK, nRST, ramif);
 memory_control MCTL(CLK, nRST, ccif);
 
 //connections
@@ -57,11 +57,11 @@ initial begin
 
     $display("\nRequesting data that is not loaded: compulsory miss test.");
     request_instr(32'h00);
-    #(PERIOD*5);
+    #(PERIOD);
     request_instr(32'h04);
-    #(PERIOD*5);
+    #(PERIOD);
     request_instr(32'h08);
-    #(PERIOD*5);
+    #(PERIOD);
     request_instr(32'h08);
     $finish();
 end // initial begin

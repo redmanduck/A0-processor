@@ -9,12 +9,11 @@ module dcache (
   datapath_cache_if.dcache dpif,
   cache_control_if.dcache ccif
 );
-
   parameter total_set = 8;
   parameter way_count = 2;
   parameter CPUID = 0;
-   
-  typedef struct packed{ 
+
+  typedef struct packed{
     logic [25:0] tag;
     word_t [1:0] block;
     logic valid;
@@ -36,23 +35,23 @@ module dcache (
   logic [25:0] rq_tag;
   logic [3:0] rq_index;
   logic hit_out, hit0, hit1;
-  logic tag_match0, tag_match1; 
+  logic tag_match0, tag_match1;
   logic cur_lru, rq_blockoffset;
   //current LRU based on index
   assign cur_lru = LRU[rq_index];
   //requested index and tag
-  assign rq_index = dpif.dmemaddr[5:2];
+  assign rq_index = dpif.dmemaddr[5:3];
   assign rq_tag = dpif.dmemaddr[31:6];
   assign rq_blockoffset = dpif.dmemaddr[2];
 
-  assign ccif.daddr = dpif.dmemaddr;
+  assign tag_match0 = (rq_tag == cway[0].dtable[rq_index].tag);
+  assign tag_match1 = (rq_tag == cway[1].dtable[rq_index].tag);
 
-  assign tag_match0 = (rq_tag == cway[0].dtable[rq_index].tag); 
-  assign tag_match1 = (rq_tag == cway[1].dtable[rq_index].tag); 
-
-  assign hit0 = (rq_tag == cway[0].dtable[rq_index].tag) && (cway[0].dtable[rq_index].valid);
-  assign hit1 = (rq_tag == cway[1].dtable[rq_index].tag) && (cway[1].dtable[rq_index].valid);
+  assign hit0 = (rq_tag == cway[0].dtable[rq_index].tag) && (cway[0].dtable[rq_index].valid) && (dpif.dmemREN || dpif.dmemWEN);
+  assign hit1 = (rq_tag == cway[1].dtable[rq_index].tag) && (cway[1].dtable[rq_index].valid) && (dpif.dmemREN || dpif.dmemWEN);
   assign hit_out = hit0 | hit1;
+
+  assign dpif.dhit = hit_out;
 
   assign dpif.dmemload = (hit0 ? cway[0].dtable[rq_index].block[rq_blockoffset] : (hit1 ? cway[1].dtable[rq_index].block[rq_blockoffset] : 32'hbadbeef1 )); //or bad1bad1
 
@@ -60,25 +59,46 @@ module dcache (
      //start from idle
      next_state = idle;
      if(state == idle) begin
+        // if (dpif.halt) begin
+        //     next_state = flush;
+        // end else if(hit_out && (dpif.dmemREN || dpif.dmemWEN)) begin //&& dpif.dmemREN
+        //     //want to read and its in the table, so we just read it
+        //     next_state = idle;
+        //     $display("READ HIT !");
+
+        // end else if(!hit_out && dpif.dmemWEN) begin
+        //     //want to write, but its not in the table so we need to fetch it
+        //     next_state = evict; //evict will check whether data need to be saved first
+
+        // end else if(!hit_out && dpif.dmemREN) begin
+        //     $display("READ MISSED !");
+        //     next_state = evict;
+
+        // end else if(!cway[0].dtable[rq_index].valid && !cway[1].dtable[rq_index].valid) begin
+        //     //otherwise we just fetch
+        //     next_state = fetch1;
+
+        // end else if(!cway[cur_lru].dtable[rq_index].dirty) begin
+        //     //TODO: is it ^cur_lru
+        //     next_state = fetch1;
+        // end
+
         if (dpif.halt) begin
             next_state = flush;
-        end if(hit_out && dpif.dmemREN) begin
+        end else if(hit_out) begin //&& dpif.dmemREN
             //want to read and its in the table, so we just read it
             next_state = idle;
-        end else if(!hit_out && dpif.dmemWEN) begin
-            //want to write, but its not in the table so we need to fetch it
-            next_state = evict; //evict will check whether data need to be saved first
-        end else if(cway[0].dtable[rq_index].valid && cway[1].dtable[rq_index].valid) begin
-            //otherwise we just fetch
+        end else if(!(dpif.dmemREN || dpif.dmemWEN)) begin
+            next_state = idle;
+        end else if(!cway[cur_lru].dtable[rq_index].dirty || (!cway[0].dtable[rq_index].valid && !cway[1].dtable[rq_index].valid)) begin
             next_state = fetch1;
-        end
-     end else if(state == evict) begin
-
-        if(cway[cur_lru].dtable[rq_index].dirty) begin
+        end else if(!hit_out && cway[cur_lru].dtable[rq_index].dirty && cway[cur_lru].dtable[rq_index].valid) begin
             next_state = wb1;
-        end else begin
-            next_state = wb2;
         end
+
+     // end else if(state == evict) begin
+
+        
 
      end else if(state == fetch_done) begin
         next_state = idle;
@@ -93,15 +113,11 @@ module dcache (
             next_state = write_table;
         end else begin
           //otherwise we are good non dirty people
-            next_state = all_fetch_done;
+            next_state = idle;
         end
 
      end else if(state == write_table) begin
-        next_state = all_fetch_done;
-
-     end else if(state == all_fetch_done) begin
         next_state = idle;
-
      end else if(state == wb1) begin
         if(ccif.dwait) begin
             next_state = wb1;
@@ -118,12 +134,12 @@ module dcache (
 
      end else if(state == reset) begin
         next_state = idle;
-     end 
+     end
   end
 
   always_comb begin : output_logic_fsm
 
-    casez(state) 
+    casez(state)
       reset: begin
         //reset both ways
         cway[0].dtable = '0;
@@ -132,25 +148,34 @@ module dcache (
       end
       flush: begin
           //we evict every dirty bitsh from the house (CACHE)
-          $display("FLUSHING (not implemented yet, bits)");
+          $display("FLUSHING (! bits)");
       end
-      idle: begin 
-            //dont do anything
+      idle: begin
+            if(hit_out)  begin 
+               LRU[rq_index] = hit0;
+            end 
       end
-      evict: begin
-            //choose dirtiness
-      end
+      // evict: begin
+      //       //choose dirtiness
+      // end
       fetch1: begin
           ccif.dREN = 1;
           cway[cur_lru].dtable[rq_index].block[0] = ccif.dload[CPUID];
-          cway[cur_lru].dtable[rq_index].valid = 1;
           cway[cur_lru].dtable[rq_index].dirty = 0;
-
+          ccif.daddr = {rq_tag, rq_index, 3'b000};
       end
       fetch2: begin
           ccif.dREN = 1;
           cway[cur_lru].dtable[rq_index].block[1] = ccif.dload[CPUID];
           cway[cur_lru].dtable[rq_index].dirty = 0;
+
+          //fetch two block offset = 1
+          ccif.daddr = {rq_tag, rq_index, 3'b100};
+
+          //TODO:dwait or dhit
+          if(!ccif.dwait) begin
+            cway[cur_lru].dtable[rq_index].valid = 1;
+          end
       end
       write_table: begin
           //after the two words are fetch into our target block
@@ -159,10 +184,7 @@ module dcache (
           cway[cur_lru].dtable[rq_index].dirty = 1;
           cway[cur_lru].dtable[rq_index].valid = 1;
       end
-      all_fetch_done: begin
-          //flip
-          LRU[rq_index] = !LRU[rq_index];
-      end
+
       wb1: begin
           //writeback data in table to RAM
           ccif.dWEN = 1;
