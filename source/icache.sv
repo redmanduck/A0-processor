@@ -15,8 +15,6 @@ module icache (
 
 
   typedef struct packed{ 
-
-    logic [5:0] index;
     logic [25:0] tag;
     word_t data;
     logic valid ;   //1 bit>?
@@ -73,7 +71,7 @@ module icache (
   always_comb begin : proc_do_fetch
     casez(state) 
       reset: begin
-            dtable <= '0;
+            dtable = '0;
       end
       fetch: begin 
             dtable[rq_index].tag = rq_tag;

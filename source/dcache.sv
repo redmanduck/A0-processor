@@ -4,53 +4,171 @@
 
 import cpu_types_pkg::*;
 
-module icache (
+module dcache (
   input logic CLK, nRST,
   datapath_cache_if.dcache dpif,
   cache_control_if.dcache ccif
 );
 
   parameter total_set = 8;
+  parameter way_count = 2;
   parameter CPUID = 0;
-
+   
   typedef struct packed{ 
+    logic [25:0] tag;
+    word_t [1:0] block;
+    logic valid;
+    logic dirty;
+  } CacheRow;
 
-    logic [5:0] index;
-    logic [25:0] tag1, tag2;
-    word_t [1:0] block1, block2;
-    logic valid1, valid2, dirty1, dirty2;    
-  } TwoWayTable;
-  
-  TwoWayTable [total_set - 1:0] dtable;
+  typedef struct packed{
+    CacheRow [total_set - 1 : 0] dtable;
+  } CacheWay;
 
-  typedef enum logic [1:2] {idle, fetch} StateType;
+  logic [total_set - 1 : 0] LRU;
+  CacheWay [1:0] cway;
+
+  typedef enum logic [4:0] {idle, evict, fetch1, fetch2, fetch_done, wb1, wb2, reset, write_table} StateType;
 
   StateType state, next_state;
 
   logic [25:0] rq_tag;
   logic [3:0] rq_index;
-  
+  logic hit_out, hit0, hit1;
+  logic tag_match0, tag_match1; //there is a tag mathc osmehwere
+  logic cur_lru, rq_blockoffset;
+  //current LRU based on index
+  assign cur_lru = LRU[rq_index];
   //requested index and tag
-  assign rq_index = dpif.imemaddr[5:2];
-  assign rq_tag = dpif.imemaddr[31:6];
+  assign rq_index = dpif.dmemaddr[5:2];
+  assign rq_tag = dpif.dmemaddr[31:6];
+  assign rq_blockoffset = dpif.dmemaddr[2];
 
-  always_comb begin : next_state_logic
+  assign ccif.daddr = dpif.dmemaddr;
+
+  assign tag_match0 = (rq_tag == cway[0].dtable[rq_index].tag); //eiter way tag matches
+  assign tag_match1 = (rq_tag == cway[1].dtable[rq_index].tag); //eiter way tag matches
+
+  assign hit0 = (rq_tag == cway[0].dtable[rq_index].tag) && (cway[0].dtable[rq_index].valid);
+  assign hit1 = (rq_tag == cway[1].dtable[rq_index].tag) && (cway[1].dtable[rq_index].valid);
+  assign hit_out = hit0 | hit1;
+
+  assign dpif.dmemload = (hit0 ? cway[0].dtable[rq_index].block[rq_blockoffset] : (hit1 ? cway[1].dtable[rq_index].block[rq_blockoffset] : 32'hbadbeef1 )); //or bad1bad1
+
+  always_comb begin : next_state_logic_fsm
      //start from idle
      next_state = idle;
-     if(state == fetch && ccif.iwait) begin
-        //if in fetch, go to itself if waiting (otherwise go to idle)
-        next_state = fetch;
-     end else if(state == idle && !dpif.ihit && dpif.imemREN)  begin
-        //if in idle, go to fetch if data request is up and has not arrived yet
-        next_state = fetch;
-     end else begin
+     if(state == idle) begin
+        if(hit_out && dpif.dmemREN) begin
+            //want to read and its in the table, so we just read it
+            next_state = idle;
+        end else if(!hit_out && dpif.dmemWEN) begin
+            //want to write, but its not in the table so we need to fetch it
+            next_state = evict; //evict will check whether data need to be saved first
+        end else if(cway[0].dtable[rq_index].valid && cway[1].dtable[rq_index].valid) begin
+            //otherwise we just fetch
+            next_state = fetch1;
+        end
+     end else if(state == evict) begin
+
+        if(cway[cur_lru].dtable[rq_index].dirty) begin
+            next_state = wb1;
+        end else begin
+            next_state = wb2;
+        end
+
+     end else if(state == fetch_done) begin
         next_state = idle;
-     end
+
+     end else if(state == fetch1) begin
+        next_state = fetch2;
+
+     end else if(state == fetch2) begin
+
+        //set dirty bit to te table if we write
+        if(dpif.dmemWEN) begin
+            next_state = write_table;
+        end else begin
+          //otherwise we are good non dirty people
+            next_state = all_fetch_done;
+        end
+
+     end else if(state == write_table) begin
+        next_state = idle;
+
+     end else if(state == wb1) begin
+        if(dwait) begin
+            next_state = wb1;
+        end else begin
+            next_state = wb2;
+        end
+
+     end else if(state == wb2) begin
+        if(dwait) begin
+            next_state = wb2;
+        end else begin
+            next_state = fetch1;
+        end
+
+     end else if(state == reset) begin
+        next_state = idle;
+     end 
   end
 
-  always_ff @ (posedge CLK, negedge nRST) begin
+  always_comb begin : output_logic_fsm
+    ccif.dREN = 0;
+    ccif.dWEN = 0;
+
+    casez(state) 
+      reset: begin
+        //reset both ways
+        cway[0].dtable = '0;
+        cway[1].dtable = '0;
+        LRU = '0;
+      end
+      idle: begin 
+            //dont do anything
+      end
+      evict: begin
+            //choose dirtiness
+      end
+      fetch1: begin
+          ccif.dREN = 1;
+          cway[cur_lru].dtable[rq_index].block[0] = ccif.dload[CPUID];
+      end
+      fetch2: begin
+          ccif.dREN = 1;
+          cway[cur_lru].dtable[rq_index].block[1] = ccif.dload[CPUID];
+      end
+      write_table: begin
+          //after the two words are fetch into our target block
+          //we update the table if dmemWEN is enabled and set dirtybits
+          dmemstore
+      end
+      all_fetch_done: begin
+          //flip
+          LRU[rq_index] = !LRU[rq_index];
+      end
+      wb1: begin
+          //writeback data in table to RAM
+          ccif.dWEN = 1;
+          ccif.dstore[CPUID] = cway[(hit0 ? 1 : 0)].dtable[rq_index].block[0];
+      end
+      wb2: begin
+          ccif.dWEN = 1;
+          ccif.dstore[CPUID] = cway[(hit0 ? 1 : 0)].dtable[rq_index].block[1];
+      end
+      default: begin
+            //dont do anything
+            ccif.dREN = 0;
+            ccif.dWEN = 0;
+      end
+    endcase
+  end
+
+  always_ff @ (posedge CLK, negedge nRST) begin : ff_fsm
     if(!nRST) begin
-        state <= idle;
+        state <= reset;
     end else begin
         state <= next_state;
    end
