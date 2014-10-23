@@ -34,7 +34,7 @@ module icache (
   assign rq_tag = dpif.imemaddr[31:6];
 
   //set ihit if there is a hit
-  assign dpif.ihit = (rq_tag == dtable[rq_index].tag) && dtable[rq_index].valid;
+  assign dpif.ihit = (rq_tag == dtable[rq_index].tag) && dtable[rq_index].valid ? 1 : 0;
   //set output data
   assign dpif.imemload = dtable[rq_index].data;  
   //read from memory when read request is on, and stop reading when ihit is asserted
@@ -43,9 +43,7 @@ module icache (
   assign ccif.iaddr[CPUID] = dpif.imemaddr; 
 
 
- /*
 
- ### ASK ERIC  V
 
   always_ff @ (posedge CLK, negedge nRST) begin : ICACHE
     if(!nRST) begin
@@ -65,24 +63,23 @@ module icache (
     end
   end
 
-*/
-  
-  //## is the (above) or below better? should we have a reset state?
-  always_comb begin : proc_do_fetch
-    casez(state) 
-      reset: begin
-            dtable = '0;
-      end
-      fetch: begin 
-            dtable[rq_index].tag = rq_tag;
-            dtable[rq_index].valid = 1;
-            dtable[rq_index].data = ccif.iload[CPUID];
-      end
-      default: begin
-            //dont do anything
-      end
-    endcase
-  end
+
+  // //## is the (above) or below better? should we have a reset state?
+  // always_comb begin : proc_do_fetch
+  //   casez(state) 
+  //     reset: begin
+  //           dtable = '0;
+  //     end
+  //     fetch: begin 
+  //           dtable[rq_index].tag = rq_tag;
+  //           dtable[rq_index].valid = 1;
+  //           dtable[rq_index].data = ccif.iload[CPUID];
+  //     end
+  //     default: begin
+  //           //dont do anything
+  //     end
+  //   endcase
+  // end
 
   always_comb begin : next_state_logic
      //start from idle
@@ -100,7 +97,7 @@ module icache (
 
   always_ff @ (posedge CLK, negedge nRST) begin
     if(!nRST) begin
-        state <= reset;
+        state <= idle;
     end else begin
         state <= next_state;
    end
