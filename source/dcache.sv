@@ -119,12 +119,6 @@ module dcache (
             if(hit_out && dpif.dmemREN)  begin 
                LRU[rq_index] = hit0;
                dpif.dmemload = (hit0 ? cway[0].dtable[rq_index].block[rq_blockoffset] : (hit1 ? cway[1].dtable[rq_index].block[rq_blockoffset] : 32'hbadbeef1 )); //or bad1bad1
-            end else if(hit_out && dpif.dmemWEN) begin
-                $display("lru = %d, idx = %d", cur_lru, rq_index);
-                cway[cur_lru].dtable[rq_index].block[rq_blockoffset] = dpif.dmemstore;
-                cway[cur_lru].dtable[rq_index].dirty = 1;
-                cway[cur_lru].dtable[rq_index].valid = 1;
-                LRU[rq_index] = hit0;
             end
       end
       fetch1: begin
@@ -133,6 +127,7 @@ module dcache (
           cway[cur_lru].dtable[rq_index].block[0] = ccif.dload[CPUID];
           cway[cur_lru].dtable[rq_index].dirty = 0;
           cway[cur_lru].dtable[rq_index].tag = rq_tag;
+          cway[cur_lru].dtable[rq_index].valid = 0;
           ccif.daddr = {rq_tag, rq_index, 3'b000};
       end
       fetch2: begin
@@ -151,6 +146,14 @@ module dcache (
             cway[cur_lru].dtable[rq_index].valid = 1;
             $display("Setting valid  %h",  ccif.daddr);
 
+          end
+
+          if(hit_out && dpif.dmemWEN) begin
+                $display("WRITING SW lru = %d, idx = %d", cur_lru, rq_index);
+                cway[cur_lru].dtable[rq_index].block[rq_blockoffset] = dpif.dmemstore;
+                cway[cur_lru].dtable[rq_index].dirty = 1;
+                cway[cur_lru].dtable[rq_index].valid = 1;
+                LRU[rq_index] = hit0;
           end
       end
       wb1: begin

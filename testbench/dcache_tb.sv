@@ -80,7 +80,7 @@ int unsigned cycles;
       // load_word(32'h00000400); //hit, loading into same set, must pick last usedto replace
       // #(2*PERIOD);
 
-      store_word(32'h08, 32'hBEEF); //hit, storing over old value (should makeit dirty)
+      store_word(32'hF8, 32'hBEEF); //hit, storing over old value (should makeit dirty)
       #PERIOD;
 
       // store_word(32'h08, 32'hDED2); //miss
