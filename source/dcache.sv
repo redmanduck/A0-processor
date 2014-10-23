@@ -28,14 +28,15 @@ module dcache (
   logic [total_set - 1 : 0] LRU;
   CacheWay [1:0] cway;
 
-  typedef enum logic [4:0] {idle, evict, fetch1, fetch2, fetch_done, wb1, wb2, reset, write_table} StateType;
+  typedef enum logic [4:0] {idle, evict, fetch1, fetch2, fetch_done, wb1, wb2, reset, write_table, all_fetch_done, flush} StateType;
+
 
   StateType state, next_state;
 
   logic [25:0] rq_tag;
   logic [3:0] rq_index;
   logic hit_out, hit0, hit1;
-  logic tag_match0, tag_match1; //there is a tag mathc osmehwere
+  logic tag_match0, tag_match1; 
   logic cur_lru, rq_blockoffset;
   //current LRU based on index
   assign cur_lru = LRU[rq_index];
@@ -46,8 +47,8 @@ module dcache (
 
   assign ccif.daddr = dpif.dmemaddr;
 
-  assign tag_match0 = (rq_tag == cway[0].dtable[rq_index].tag); //eiter way tag matches
-  assign tag_match1 = (rq_tag == cway[1].dtable[rq_index].tag); //eiter way tag matches
+  assign tag_match0 = (rq_tag == cway[0].dtable[rq_index].tag); 
+  assign tag_match1 = (rq_tag == cway[1].dtable[rq_index].tag); 
 
   assign hit0 = (rq_tag == cway[0].dtable[rq_index].tag) && (cway[0].dtable[rq_index].valid);
   assign hit1 = (rq_tag == cway[1].dtable[rq_index].tag) && (cway[1].dtable[rq_index].valid);
@@ -59,7 +60,9 @@ module dcache (
      //start from idle
      next_state = idle;
      if(state == idle) begin
-        if(hit_out && dpif.dmemREN) begin
+        if (dpif.halt) begin
+            next_state = flush;
+        end if(hit_out && dpif.dmemREN) begin
             //want to read and its in the table, so we just read it
             next_state = idle;
         end else if(!hit_out && dpif.dmemWEN) begin
@@ -94,17 +97,20 @@ module dcache (
         end
 
      end else if(state == write_table) begin
+        next_state = all_fetch_done;
+
+     end else if(state == all_fetch_done) begin
         next_state = idle;
 
      end else if(state == wb1) begin
-        if(dwait) begin
+        if(ccif.dwait) begin
             next_state = wb1;
         end else begin
             next_state = wb2;
         end
 
      end else if(state == wb2) begin
-        if(dwait) begin
+        if(ccif.dwait) begin
             next_state = wb2;
         end else begin
             next_state = fetch1;
@@ -116,8 +122,6 @@ module dcache (
   end
 
   always_comb begin : output_logic_fsm
-    ccif.dREN = 0;
-    ccif.dWEN = 0;
 
     casez(state) 
       reset: begin
@@ -125,6 +129,10 @@ module dcache (
         cway[0].dtable = '0;
         cway[1].dtable = '0;
         LRU = '0;
+      end
+      flush: begin
+          //we evict every dirty bitsh from the house (CACHE)
+          $display("FLUSHING (not implemented yet, bits)");
       end
       idle: begin 
             //dont do anything
@@ -135,15 +143,21 @@ module dcache (
       fetch1: begin
           ccif.dREN = 1;
           cway[cur_lru].dtable[rq_index].block[0] = ccif.dload[CPUID];
+          cway[cur_lru].dtable[rq_index].valid = 1;
+          cway[cur_lru].dtable[rq_index].dirty = 0;
+
       end
       fetch2: begin
           ccif.dREN = 1;
           cway[cur_lru].dtable[rq_index].block[1] = ccif.dload[CPUID];
+          cway[cur_lru].dtable[rq_index].dirty = 0;
       end
       write_table: begin
           //after the two words are fetch into our target block
-          //we update the table if dmemWEN is enabled and set dirtybits
-          dmemstore
+          //we update the table if dmemWEN is enabled and set dirtybits //dpif.dmemstore
+          cway[cur_lru].dtable[rq_index].block[rq_blockoffset] = dpif.dmemstore;
+          cway[cur_lru].dtable[rq_index].dirty = 1;
+          cway[cur_lru].dtable[rq_index].valid = 1;
       end
       all_fetch_done: begin
           //flip
