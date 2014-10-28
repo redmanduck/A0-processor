@@ -198,7 +198,16 @@ module datapath (
   assign idex.rt_in = cuif.rt;
   assign idex.rd_in = cuif.rd;
   assign idex.rs_in = cuif.rs;
-  assign dpif.halt = mweb.halt_out; //[pass along the halt]
+  
+  always_ff @ (posedge CLK, negedge nRST) begin
+    if(!nRST) begin
+        dpif.halt <= 0;
+    end else begin
+        dpif.halt <= mweb.halt_out;
+    end
+  end
+
+
   assign idex.halt_in = cuif.halt;
   assign xmem.halt_in = idex.halt_out;
   assign mweb.halt_in = xmem.halt_out;
@@ -208,6 +217,7 @@ module datapath (
        when stall is asserted.
     -- stall when there is a pending memory operation
   */
+
   logic special_ifid_flush;
   always_comb begin
     if ((ifid.pcn_out == pcif.pc_plus_4) && (pcif.pc_plus_4 != 0)) begin

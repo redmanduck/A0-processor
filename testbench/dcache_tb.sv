@@ -83,15 +83,18 @@ int unsigned cycles;
       store_word(32'h08, 32'hBEEFDEAD);  //write to address that hit
  //     store_word(32'hF8, 32'hBEEF);  //write to address that miss
 
-      #PERIOD;
+
+      #(PERIOD*10);
+
+      load_word(32'h08);  //miss
+
 
       // store_word(32'h08, 32'hDED2); //miss
-      // #PERIOD;
 
 
 
       dcif.halt = 1;
-      #PERIOD;
+      #(PERIOD*40);
 
 
       $finish();

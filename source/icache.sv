@@ -14,12 +14,12 @@ module icache (
   parameter CPUID = 0;
 
 
-  typedef struct packed{ 
+  typedef struct packed{
     logic [25:0] tag;
     word_t data;
     logic valid ;   //1 bit>?
   } CacheTable;
-  
+
   CacheTable [total_set - 1:0] dtable;
 
   typedef enum logic [1:0] {reset, idle, fetch} StateType;
@@ -36,11 +36,11 @@ module icache (
   //set ihit if there is a hit
   assign dpif.ihit = (rq_tag == dtable[rq_index].tag) && dtable[rq_index].valid ? 1 : 0;
   //set output data
-  assign dpif.imemload = dtable[rq_index].data;  
+  assign dpif.imemload = dtable[rq_index].data;
   //read from memory when read request is on, and stop reading when ihit is asserted
-  assign ccif.iREN[CPUID] = !dpif.ihit && dpif.imemREN; 
+  assign ccif.iREN[CPUID] = !dpif.ihit && dpif.imemREN;
   //set address output
-  assign ccif.iaddr[CPUID] = dpif.imemaddr; 
+  assign ccif.iaddr[CPUID] = dpif.imemaddr;
 
 
 
@@ -55,31 +55,13 @@ module icache (
             dtable[rq_index].tag = rq_tag;
             dtable[rq_index].valid = 1;
             dtable[rq_index].data = ccif.iload[CPUID];
-       end 
+       end
        default: begin
           //dont do stuff
        end
      endcase
     end
   end
-
-
-  // //## is the (above) or below better? should we have a reset state?
-  // always_comb begin : proc_do_fetch
-  //   casez(state) 
-  //     reset: begin
-  //           dtable = '0;
-  //     end
-  //     fetch: begin 
-  //           dtable[rq_index].tag = rq_tag;
-  //           dtable[rq_index].valid = 1;
-  //           dtable[rq_index].data = ccif.iload[CPUID];
-  //     end
-  //     default: begin
-  //           //dont do anything
-  //     end
-  //   endcase
-  // end
 
   always_comb begin : next_state_logic
      //start from idle
