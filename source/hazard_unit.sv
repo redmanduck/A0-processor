@@ -11,7 +11,7 @@ module hazard_unit(
   always_comb begin
      hzif.stall_ifid = 0;
      hzif.stall_idex = 0;
-     hzif.stall_xmem = 0;
+     hzif.stall_xmem = (hzif.dmemREN || hzif.dmemWEN ? !hzif.dhit : 0);
      hzif.stall_wb = 0;
 
      hzif.flush_ifid = hzif.dhit;
@@ -19,7 +19,7 @@ module hazard_unit(
      hzif.flush_xmem = 0;
      hzif.flush_wb = 0;
 
-     hzif.pc_en = !hzif.dhit;
+     hzif.pc_en = (hzif.dmemREN || hzif.dmemWEN ? hzif.dhit : 1);
 
      if((hzif.branch && hzif.is_equal) || (hzif.branch_neq && !hzif.is_equal)) begin
         hzif.flush_ifid = 1;

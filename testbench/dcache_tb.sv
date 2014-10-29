@@ -62,25 +62,37 @@ int unsigned cycles;
       //Check it.
 
       $display("\nRequesting data that is not loaded: compulsory miss test.");
-      // load_word(32'h00); //miss
+
+      store_word(32'hE0, 32'hBEEFDEAD);
+      #PERIOD;
+      store_word(32'hA4, 32'hAAAABBBB);
+      #PERIOD;
+      store_word(32'hB8, 32'hC4C4C4C4);
+      #PERIOD;
+      store_word(32'h04, 32'hB00B1111);
+      #PERIOD;
+
+
+      load_word(32'hE0);
+      //supposed to HIT !
+      #PERIOD;
+
+      // load_word(32'h08); //miss
       // #PERIOD;
 
-      load_word(32'h08); //miss
-      #PERIOD;
+      // load_word(32'h0C); //hit
+      // #PERIOD;
 
-      load_word(32'h0C); //hit
-      #PERIOD;
+      // load_word(32'h3C); //miss
+      // #PERIOD;
 
-      load_word(32'h3C); //miss
-      #PERIOD;
-
-      load_word(32'h00);  //miss
-      #PERIOD;
+      // load_word(32'h00);  //miss
+      // #PERIOD;
 
       // load_word(32'h00000400); //hit, loading into same set, must pick last usedto replace
       // #(2*PERIOD);
 
-      store_word(32'h08, 32'hBEEFDEAD);  //write to address that hit
+      // store_word(32'hE0, 32'hBEEFDEAD);  //write to address that hit
  //     store_word(32'hF8, 32'hBEEF);  //write to address that miss
 
 

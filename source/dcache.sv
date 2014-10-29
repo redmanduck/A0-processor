@@ -38,6 +38,9 @@ module dcache (
   logic tag_match0, tag_match1;
   logic cur_lru, rq_blockoffset;
 
+  word_t hitcount, hitcount_next;
+  word_t hit_wait_count, hit_wait_count_next;
+
   logic FLUSH_INDEX_INCREM_EN;
   logic which_word, write_dirty, write_valid, CACHE_WEN;
   word_t write_data;
@@ -171,6 +174,8 @@ module dcache (
     // write_tag = 0;
     // write_data = 0;
     dcif.flushed = 0;
+    hitcount_next = hitcount;
+    hit_wait_count_next = hit_wait_count + 1;
 
     casez(state)
       flush1: begin
@@ -254,17 +259,27 @@ module dcache (
           dpif.flushed = 1;
       end
       idle: begin
-            ccif.dREN = 0; ccif.dWEN = 0;
+            ccif.dREN = 0; 
+            ccif.dWEN = 0;
+            hit_wait_count_next = 0;
 
-            if(hit_out && dpif.dmemWEN) begin
-                $display("idle WRITING SW lru = %d, idx = %d", cur_lru, rq_index);
-                FLUSH_INDEX_INCREM_EN  = 0;
-                CACHE_WEN = 1;
-                which_word = rq_blockoffset;
-                write_dirty = 1;
-                write_valid = 1;
-                write_tag = rq_tag;
-                write_data = dpif.dmemstore;
+            if(hit_out) begin
+
+                if(hit_wait_count < 1) begin
+                    hitcount_next = hitcount + 1;
+                end
+
+                if(dpif.dmemWEN == 1'b1) begin
+                    $display("idle WRITING SW lru = %d, idx = %d", cur_lru, rq_index);
+                    FLUSH_INDEX_INCREM_EN = 0;
+                    CACHE_WEN = 1;
+
+                    which_word = rq_blockoffset;
+                    write_dirty = 1;
+                    write_valid = 1;
+                    write_tag = rq_tag;
+                    write_data = dpif.dmemstore;
+                end
 
             end else begin
                 CACHE_WEN = 0;
@@ -360,6 +375,8 @@ module dcache (
         //dont do anything
         ccif.dREN = 0;
         ccif.dWEN = 0;
+        dcif.flushed = 0;
+        hitcount_next = hitcount;
 
         FLUSH_INDEX_INCREM_EN  = 0;
         write_dirty = 0;
@@ -394,8 +411,14 @@ module dcache (
   always_ff @ (posedge CLK, negedge nRST) begin : ff_fsm
     if(!nRST) begin
         state <= idle;
+        hitcount <= 0;
+        hit_wait_count <= 0;
     end else begin
         state <= next_state;
+        hitcount <= hitcount_next;
+        hit_wait_count <= hit_wait_count_next;
+        $display("idle count : %d", hit_wait_count);
+        $display("hit count : %d", hitcount);
     end
   end
 

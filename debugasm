@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+make clean
+asm asmFiles/$1
+make system.$2
+sim
+diff memcpu.hex memsim.hex

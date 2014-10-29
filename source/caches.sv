@@ -45,7 +45,7 @@ module caches (
   // end
 
   // dcache invalidate before halt
-  assign dcif.flushed = dcif.halt;
+  //assign dcif.flushed = dcif.halt;
 
   // //single cycle
   // assign dcif.ihit = (dcif.imemREN) ? ~ccif.iwait[CPUID] : 0;

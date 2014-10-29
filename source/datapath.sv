@@ -247,13 +247,17 @@ module datapath (
            idex.WEN <= !stall;
       end
   end
-  always_ff @(posedge CLK, negedge nRST) begin
-       if(!nRST) begin
-           xmem.WEN <= 1;
-      end else begin
-           xmem.WEN <= !hzif.stall_xmem;
-      end
-  end
+
+  // always_ff @(posedge CLK, negedge nRST) begin
+  //      if(!nRST) begin
+  //          xmem.WEN <= 1;
+  //     end else begin
+  //          xmem.WEN <= !hzif.stall_xmem;
+  //     end
+  // end
+
+  assign xmem.WEN = !hzif.stall_xmem;
+
   always_ff @(posedge CLK, negedge nRST) begin
       if(!nRST) begin
            mweb.WEN <= 1;
@@ -289,7 +293,9 @@ module datapath (
    assign hzif.branch_neq = cuif.BranchNEQ;
    //this signal tells the HZU that we are going to take this branch
    assign hzif.is_equal = reg_equal;
-   assign hzif.dhit = ((dpif.dmemREN || dpif.dmemWEN) ? dpif.dhit :  0);
+   assign hzif.dhit = dpif.dhit;//((dpif.dmemREN || dpif.dmemWEN) ? dpif.dhit :  0);
+   assign hzif.dmemREN = dpif.dmemREN;
+   assign hzif.dmemWEN = dpif.dmemWEN;
    assign hzif.idex_rs = idex.rs_out;
    assign hzif.mwb_rd = mweb.reg_instr_out;
    /*

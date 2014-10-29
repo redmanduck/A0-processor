@@ -1,0 +1,361 @@
+[1mdiff --git a/asmFiles/mergesort.asm b/asmFiles/mergesort.asm[m
+[1mindex 614c2de..4c07386 100644[m
+[1m--- a/asmFiles/mergesort.asm[m
+[1m+++ b/asmFiles/mergesort.asm[m
+[36m@@ -26,8 +26,8 @@[m [morg 0x0000[m
+   ori   $t0, $zero, sorted #50[m
+   push  $t0                #54[m
+   jal   merge              #58[m
+[31m-  addiu $sp, $sp, 4        #60[m
+[31m-  halt                     #64[m
+[32m+[m[32m  addiu $sp, $sp, 4        #5C[m
+[32m+[m[32m  halt                     #60[m
+ [m
+ [m
+ [m
+[36m@@ -35,22 +35,22 @@[m [morg 0x0000[m
+ # $a0 : pointer to data start[m
+ # $a1 : size of array[m
+ #--------------------------------------[m
+[31m-insertion_sort:            #68[m
+[31m-  ori   $t0, $zero, 4      #6C[m
+[31m-  sll   $t1, $a1, 2        #70[m
+[32m+[m[32minsertion_sort:            #64[m
+[32m+[m[32m  ori   $t0, $zero, 4      #68[m
+[32m+[m[32m  sll   $t1, $a1, 2        #6C[m
+ is_outer:[m
+[31m-  sltu  $at, $t0, $t1      #74[m
+[31m-  beq   $at, $zero, is_end #78[m
+[31m-  addu  $t9, $a0, $t0      #7C[m
+[31m-  lw    $t8, 0($t9)        #80[m
+[32m+[m[32m  sltu  $at, $t0, $t1      #70[m
+[32m+[m[32m  beq   $at, $zero, is_end #74[m
+[32m+[m[32m  addu  $t9, $a0, $t0      #78[m
+[32m+[m[32m  lw    $t8, 0($t9)        #7C[m
+ is_inner:[m
+[31m-  beq   $t9, $a0, is_inner_end  #84[m
+[31m-  lw    $t7, -4($t9)            #88[m
+[31m-  slt   $at, $t8, $t7           #8C[m
+[31m-  beq   $at, $zero, is_inner_end  #90[m
+[31m-  sw    $t7, 0($t9) #94[m
+[31m-  addiu $t9, $t9, -4 #98[m
+[31m-  j     is_inner #9C[m
+[32m+[m[32m  beq   $t9, $a0, is_inner_end  #80[m
+[32m+[m[32m  lw    $t7, -4($t9)            #84[m
+[32m+[m[32m  slt   $at, $t8, $t7           #88[m
+[32m+[m[32m  beq   $at, $zero, is_inner_end  #8C[m
+[32m+[m[32m  sw    $t7, 0($t9) #90[m
+[32m+[m[32m  addiu $t9, $t9, -4 #94[m
+[32m+[m[32m  j     is_inner #98[m
+ is_inner_end:[m
+   sw    $t8, 0($t9) #A0[m
+   addiu $t0, $t0, 4 #A4[m
+[1mdiff --git a/include/.datapath_cache_if.vh.swo b/include/.datapath_cache_if.vh.swo[m
+[1mdeleted file mode 100644[m
+[1mindex c907a10..0000000[m
+Binary files a/include/.datapath_cache_if.vh.swo and /dev/null differ
+[1mdiff --git a/include/.pipereg_if.vh.swo b/include/.pipereg_if.vh.swo[m
+[1mdeleted file mode 100644[m
+[1mindex 32e77f1..0000000[m
+Binary files a/include/.pipereg_if.vh.swo and /dev/null differ
+[1mdiff --git a/include/pc_if.vh b/include/pc_if.vh[m
+[1mindex 02dcab8..05f1aad 100644[m
+[1m--- a/include/pc_if.vh[m
+[1m+++ b/include/pc_if.vh[m
+[36m@@ -16,13 +16,15 @@[m [minterface pc_if;[m
+   logic [2:0] PCSrc;[m
+   word_t rdat1;[m
+   logic [25:0] immediate26;[m
+[32m+[m[32m  logic [25:0] if_immediate26;[m
+   logic [15:0] immediate;[m
+   logic bubble;[m
+   word_t imemaddr;[m
+   word_t pc_plus_4;[m
+[32m+[m[32m  logic if_jump_detect;[m
+ [m
+   modport pc([m
+[31m-    input ihit, dhit, immediate, immediate26, rdat1, pc_en, PCSrc, bubble,[m
+[32m+[m[32m    input ihit, dhit, immediate, immediate26, rdat1, pc_en, PCSrc, bubble, if_jump_detect, if_immediate26,[m
+     output imemaddr, pc_plus_4[m
+   );[m
+ [m
+[1mdiff --git a/scripts/system.do b/scripts/system.do[m
+[1mindex f6ed77b..5e73452 100644[m
+[1m--- a/scripts/system.do[m
+[1m+++ b/scripts/system.do[m
+[36m@@ -52,12 +52,11 @@[m [madd wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/ifid/WEN[m
+ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/fwd_rdat1[m
+ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/fwd_rdat2[m
+ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/ifid/flush[m
+[31m-add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/special_ifid_WEN[m
+ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/CLK[m
+ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/pcn[m
+ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/nRST[m
+ add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/next_address[m
+[31m-add wave -noupdate -expand -group PLATCH_IFID /system_tb/DUT/CPU/DP/IFID/instruction[m
+[32m+[m[32madd wave -noupdate -expand -group PLATCH_IFID -color Cyan -itemcolor {Midnight Blue} /system_tb/DUT/CPU/DP/IFID/instruction[m
+ add wave -noupdate -expand -group PLATCH_ALU /system_tb/DUT/CPU/DP/ALU/ALUOP[m
+ add wave -noupdate -expand -group PLATCH_ALU /system_tb/DUT/CPU/DP/ALU/Port_A[m
+ add wave -noupdate -expand -group PLATCH_ALU /system_tb/DUT/CPU/DP/ALU/Port_B[m
+[36m@@ -82,7 +81,7 @@[m [madd wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/forward[m
+ add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/forwardB[m
+ add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/fwif/forwardR1[m
+ add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/fwif/forwardR2[m
+[31m-add wave -noupdate -expand /system_tb/DUT/CPU/DP/RF/regs[m
+[32m+[m[32madd wave -noupdate /system_tb/DUT/CPU/DP/RF/regs[m
+ add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/halt[m
+ add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/iREN[m
+ add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/dWEN[m
+[36m@@ -126,21 +125,22 @@[m [madd wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/stal[m
+ add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/stall_ifid[m
+ add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/stall_wb[m
+ add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/stall_xmem[m
+[31m-add wave -noupdate -expand -group HAZARDUNIT /system_tb/DUT/CPU/DP/HZU/hzif/take_branch[m
+[31m-add wave -noupdate /system_tb/DUT/CPU/CLK[m
+[32m+[m[32madd wave -noupdate /system_tb/DUT/CPU/DP/HZU/hzif/take_branch[m
+ add wave -noupdate /system_tb/DUT/CPU/nRST[m
+[31m-add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/ihit[m
+[31m-add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/dhit[m
+[31m-add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/pc_en[m
+[32m+[m[32madd wave -noupdate -expand -group PCIF -color Gold /system_tb/DUT/CPU/CLK[m
+[32m+[m[32madd wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/dpif/halt[m
+ add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/PCSrc[m
+[31m-add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/PC/PC[m
+[32m+[m[32madd wave -noupdate -expand -group PCIF -color Red /system_tb/DUT/CPU/DP/pcif/pc_en[m
+[32m+[m[32madd wave -noupdate -expand -group PCIF -color {Blue Violet} /system_tb/DUT/CPU/DP/PC/PC[m
+ add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/PC/PC_next[m
+[32m+[m[32madd wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/PC/PC_next_filtered[m
+ add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/rdat1[m
+ add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/immediate26[m
+[32m+[m[32madd wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/PC/pcif/bubble[m
+[32m+[m[32madd wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/if_jump_detect[m
+ add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/immediate[m
+ add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/imemaddr[m
+ add wave -noupdate -expand -group PCIF /system_tb/DUT/CPU/DP/pcif/pc_plus_4[m
+[31m-add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/halt[m
+ add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/ihit[m
+ add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/imemREN[m
+ add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/imemload[m
+[36m@@ -177,7 +177,7 @@[m [madd wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/WB_MemToReg[m
+ add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/reg_instr[m
+ add wave -noupdate -expand -group WB /system_tb/DUT/CPU/DP/MEMWB/halt[m
+ TreeUpdate [SetDefaultTree][m
+[31m-WaveRestoreCursors {{Cursor 1} {1080000 ps} 0}[m
+[32m+[m[32mWaveRestoreCursors {{Cursor 1} {0 ps} 0}[m
+ quietly wave cursor active 1[m
+ configure wave -namecolwidth 231[m
+ configure wave -valuecolwidth 101[m
+[36m@@ -193,4 +193,4 @@[m [mconfigure wave -griddelta 40[m
+ configure wave -timeline 0[m
+ configure wave -timelineunits ns[m
+ update[m
+[31m-WaveRestoreZoom {912942 ps} {1927322 ps}[m
+[32m+[m[32mWaveRestoreZoom {0 ps} {507190 ps}[m
+[1mdiff --git a/source/control_unit.sv b/source/control_unit.sv[m
+[1mindex 0e03541..d75a521 100644[m
+[1m--- a/source/control_unit.sv[m
+[1m+++ b/source/control_unit.sv[m
+[36m@@ -53,7 +53,7 @@[m [mmodule control_unit ([m
+     endcase[m
+   end[m
+ [m
+[31m-  always_ff @ (posedge CLK, negedge nRST) begin[m
+[32m+[m[32m  /*always_ff @ (posedge CLK, negedge nRST) begin[m
+      if(!nRST) begin[m
+        cuif.halt = 0;[m
+      end else if(cuif.opcode == HALT) begin[m
+[36m@@ -61,7 +61,8 @@[m [mmodule control_unit ([m
+      end else begin[m
+        cuif.halt = 0;[m
+      end[m
+[31m-  end[m
+[32m+[m[32m  end*/[m
+[32m+[m[32m  assign cuif.halt = (cuif.opcode == HALT ? 1 : (!nRST : 0 : 1));[m
+ [m
+   always_comb begin : PC_CONTROLS[m
+     cuif.Jump = 1'b0;[m
+[1mdiff --git a/source/datapath.sv b/source/datapath.sv[m
+[1mindex 100f0f5..9ff70b9 100644[m
+[1m--- a/source/datapath.sv[m
+[1m+++ b/source/datapath.sv[m
+[36m@@ -93,7 +93,7 @@[m [mmodule datapath ([m
+   assign fwif.regRd = 1'b1;[m
+   assign fwif.memWr = idex.M_MemWrite_out;[m
+   assign fwif.memRegWr = xmem.WB_RegWrite_out;[m
+[31m-  assign fwif.exRegWr = idex.WB_RegWrite_out; [m
+[32m+[m[32m  assign fwif.exRegWr = idex.WB_RegWrite_out;[m
+   assign fwif.exMemWr = idex.M_MemWrite_out;//cuif.MemWr;[m
+ [m
+   assign xmem.alu_output_in = alu_output;[m
+[36m@@ -117,7 +117,7 @@[m [mmodule datapath ([m
+   assign rfif.wdat = writeback;[m
+ [m
+   always_comb begin : MUX_RGDST[m
+[31m-    casez (idex.EX_RegDst_out) [m
+[32m+[m[32m    casez (idex.EX_RegDst_out)[m
+       1: xmem.reg_instr_in = idex.rd_out;[m
+       2: xmem.reg_instr_in = 31; //JAL[m
+       default: xmem.reg_instr_in = idex.rt_out;[m
+[36m@@ -141,12 +141,12 @@[m [mmodule datapath ([m
+   /*[m
+     Note:  pcif.bubble = (cuif.instruction == 0  && (xmem.M_Branch_out) ? 1 : 0);[m
+     		 will work for mult[m
+[31m-    		[m
+[32m+[m
+   */[m
+[31m-  assign pcif.bubble = (cuif.instruction == 0  && (idex.M_Branch_out) ? 1 : 0);[m
+[32m+[m[32m  assign pcif.bubble = (cuif.instruction == 0  && (idex.M_Branch_out || idex.M_Jump_out) ? 1 : 0);[m
+[32m+[m
+[32m+[m[32m  assign pcif.pc_en =  hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit[m
+ [m
+[31m-  assign pcif.pc_en = hzif.pc_en & nRST & !cuif.halt & dpif.ihit & !dpif.dhit; //dhit[m
+[31m- [m
+   assign idex.M_Jump_in = cuif.Jump;[m
+ [m
+  //mweb-> cuif.halt[m
+[36m@@ -216,6 +216,30 @@[m [mmodule datapath ([m
+       special_ifid_flush = 0;[m
+     end[m
+   end[m
+[32m+[m
+[32m+[m
+[32m+[m[32m  /*[m
+[32m+[m[32m        Special Double Garbage Detector[m
+[32m+[m[32m   */[m
+[32m+[m[32m  word_t previous_pc4;[m
+[32m+[m[32m  logic special_ifid_stall;[m
+[32m+[m[32m  always_ff @(posedge CLK, negedge nRST) begin[m
+[32m+[m[32m     if(!nRST) begin[m
+[32m+[m[32m        previous_pc4 <= 0;[m
+[32m+[m[32m     end else begin[m
+[32m+[m[32m        previous_pc4 <= pcif.pc_plus_4;[m
+[32m+[m[32m     end[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m // if (previous_pc4 == pcif.pc_plus_4  && cuif.PCSrc == 1  && cuif.instruction  == 0)[m
+[32m+[m[32m  always_comb begin[m
+[32m+[m[32m    if((previous_pc4 == pcif.pc_plus_4) && (pcif.PCSrc == 1) && (cuif.instruction == 0)) begin[m
+[32m+[m[32m       special_ifid_stall = 1;[m
+[32m+[m[32m    end else begin[m
+[32m+[m[32m       special_ifid_stall = 0;[m
+[32m+[m[32m    end[m
+[32m+[m[32m  end[m
+[32m+[m
+   assign ifid.flush = hzif.flush_ifid || special_ifid_flush;[m
+   assign idex.bubble_in = ifid.flushed_out;[m
+   //logic test;[m
+[36m@@ -223,13 +247,15 @@[m [mmodule datapath ([m
+   //assign test = (idex.bubble_out ? !pcif.pc_en : 1);[m
+ [m
+   assign stall = (dpif.dmemREN || dpif.dmemWEN ? (!dpif.dhit) : 0);[m
+[31m-  always_ff @(posedge CLK, negedge nRST) begin[m
+[32m+[m[32m  assign ifid.WEN = !stall && dpif.ihit && !special_ifid_stall && !hzif.stall_ifid;[m
+[32m+[m
+[32m+[m[32m  /*always_ff @(posedge CLK, negedge nRST) begin[m
+       if(!nRST) begin[m
+            ifid.WEN <= 1;[m
+       end else begin[m
+[31m-           ifid.WEN <= (!(stall && hzif.stall_ifid));[m
+[32m+[m[32m           ifid.WEN <= !stall && !hzif.stall_ifid && dpif.ihit;[m
+       end[m
+[31m-  end[m
+[32m+[m[32m  end*/[m
+   always_ff @(posedge CLK, negedge nRST) begin[m
+        if(!nRST) begin[m
+            idex.WEN <= 1;[m
+[36m@@ -251,7 +277,7 @@[m [mmodule datapath ([m
+            mweb.WEN <= !stall;[m
+       end[m
+   end[m
+[31m-  [m
+[32m+[m
+   assign fwif.id_rt = cuif.rt;[m
+   assign fwif.id_rs = cuif.rs;[m
+  // assign fwd_rdat1 = (fwif.forwardR1 == 1 ? xmem.alu_output_out : rfif.rdat1); //incomplete[m
+[36m@@ -264,10 +290,14 @@[m [mmodule datapath ([m
+   assign reg_equal = ((fwd_rdat1 - fwd_rdat2) == 0 ? 1 : 0);[m
+   //TODO: move this to decode stage!!! IMPORTANT[m
+   //mux in datapath to do stuff  ^umm what?[m
+[31m-  [m
+[32m+[m
+   always_comb begin[m
+      if(cuif.Branch && reg_equal || cuif.BranchNEQ && !reg_equal) begin //idex.M_branch_out[m
+[31m-        pcif.PCSrc = 2; //jump[m
+[32m+[m[32m        pcif.PCSrc = 2; //Branch[m
+[32m+[m[32m     end else if (!cuif.instruction && idex.M_Jump_out) begin[m
+[32m+[m[32m        pcif.PCSrc = 1; //Jump[m
+[32m+[m[32m    end else if (!cuif.instruction && idex.M_Branch_out) begin[m
+[32m+[m[32m        pcif.PCSrc = 2; //Branch[m
+      end else begin[m
+         pcif.PCSrc = cuif.PCSrc;[m
+      end[m
+[36m@@ -286,6 +316,11 @@[m [mmodule datapath ([m
+     PIPELINE LATCHES connections[m
+   */[m
+ [m
+[32m+[m[32m  logic if_jump_detect;[m
+[32m+[m[32m  assign if_jump_detect = (dpif.imemload[31:26] == J);[m
+[32m+[m[32m  assign pcif.if_immediate26 = dpif.imemload[25:0];[m
+[32m+[m[32m  assign pcif.if_jump_detect = if_jump_detect;[m
+[32m+[m
+   assign ifid.instruction_in = dpif.imemload;[m
+   assign ifid.next_address_in = pcif.pc_plus_4;[m
+ [m
+[1mdiff --git a/source/forward_unit.sv b/source/forward_unit.sv[m
+[1mindex 9b52a15..dcdaaaa 100644[m
+[1m--- a/source/forward_unit.sv[m
+[1m+++ b/source/forward_unit.sv[m
+[36m@@ -73,8 +73,8 @@[m [malways_comb begin : proc_forwarddata[m
+ 	if(fw_if.memWr) begin[m
+ 		if((fw_if.mem_rd == fw_if.ex_rt) && fw_if.memRegWr) begin[m
+ 			fw_if.forwardData = 1;[m
+[31m-		end else if ((fw_if.wb_rd == fw_if.ex_rt) && fw_if.wbRegWr) begin[m
+[31m-			fw_if.forwardData = 1;[m
+[32m+[m[32m//		end else if ((fw_if.wb_rd == fw_if.ex_rt) && fw_if.wbRegWr) begin[m
+[32m+[m[32m//			fw_if.forwardData = 1;[m
+ 		end else begin[m
+ 			fw_if.forwardData = 0;[m
+ 		end[m
+[1mdiff --git a/source/hazard_unit.sv b/source/hazard_unit.sv[m
+[1mindex acf216a..41d416d 100644[m
+[1m--- a/source/hazard_unit.sv[m
+[1m+++ b/source/hazard_unit.sv[m
+[36m@@ -27,6 +27,8 @@[m [mmodule hazard_unit([m
+      end else if(hzif.jump) begin[m
+       // hzif.pc_en = 0;[m
+         hzif.flush_ifid = 1;[m
+[32m+[m[32m       // hzif.stall_ifid = 1;[m
+[32m+[m[32m        hzif.pc_en = 1; //addded[m
+      end else if(hzif.idex_rs == hzif.mwb_rd && (hzif.idex_rs && hzif.mwb_rd)) begin[m
+        // hzif.pc_en = 0;[m
+         hzif.stall_ifid = 1;[m
+[1mdiff --git a/source/pl_id_ex.sv b/source/pl_id_ex.sv[m
+[1mindex af4e459..95041e2 100644[m
+[1m--- a/source/pl_id_ex.sv[m
+[1m+++ b/source/pl_id_ex.sv[m
+[36m@@ -78,12 +78,14 @@[m [mmodule pl_id_ex([m
+          halt <= '0;[m
+          rt <= '0;[m
+          rd <= '0;[m
+[32m+[m[32m         M_Jump <= '0;[m
+          rs <= '0;[m
+          shamt <= '0;[m
+       end else if(idex.flush) begin[m
+         WB_MemToReg <= '0;[m
+         bubble <= '0;[m
+         WB_RegWrite <= '0;[m
+[32m+[m[32m        M_Jump <= '0;[m
+         M_Branch <= '0;[m
+         pcn <= '0;[m
+          M_MemRead <= '0;[m
+[1mdiff --git a/test.sh b/test.sh[m
+[1mindex d9359bb..0f3e8dc 100755[m
+[1m--- a/test.sh[m
+[1m+++ b/test.sh[m
+[36m@@ -1,4 +1,4 @@[m
+ #!/bin/bash[m
+ make clean[m
+[31m-asm asmFiles/test.loadstore.asm[m
+[31m-make memory_control.$1[m
+[32m+[m[32masm asmFiles/$1.asm[m
+[32m+[m[32mmake system.$2[m
