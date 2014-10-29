@@ -27,7 +27,7 @@ module dcache (
   logic [total_set - 1 : 0] LRU;
   CacheWay [1:0] cway;
 
-  typedef enum logic [5:0] {idle, evict, fetch1, fetch2, fetch_done, wb1, wb2, reset,  all_fetch_done, flush1, flush2, flush3, flush4, all_flushed} StateType;
+  typedef enum logic [5:0] {idle, fetch1, fetch2, fetch_done, wb1, wb2, reset,  all_fetch_done, flush1, flush2, flush3, flush4, all_flushed, done_everything} StateType;
 
 
   StateType state, next_state;
@@ -63,7 +63,7 @@ module dcache (
   assign dpif.dhit = hit_out;
 
   CacheRow [1:0] flushset;
-  logic [3:0] flush_index;
+  logic [2:0] flush_index;
 
   assign flushset[0] = cway[0].dtable[flush_index];
   assign flushset[1] = cway[1].dtable[flush_index];
@@ -121,7 +121,14 @@ module dcache (
 
     end else if(state == all_flushed) begin
 
-        next_state = all_flushed;
+        if(!ccif.dwait) begin
+          next_state = done_everything;
+        end else begin
+          next_state = all_flushed;
+        end
+     end else if(state == done_everything) begin
+
+        next_state = done_everything;
 
      end else if(state == fetch_done) begin
         next_state = idle;
@@ -254,8 +261,16 @@ module dcache (
           $display("FLUSHING 4 : idx = %h, data = %h, dirty = %h\n", flush_index, flushset[1].block[1], flushset[1].dirty);
 
       end
+
       all_flushed: begin
-          $display("ALL DONE");
+          $display("ALL DONE with hitcount %d", hitcount);
+          ccif.dREN = 0;
+          ccif.dWEN = 1;
+          ccif.dstore[CPUID] = hitcount;
+          ccif.daddr[CPUID] = 32'h3100;
+          CACHE_WEN = 0;
+      end
+      done_everything: begin
           dpif.flushed = 1;
       end
       idle: begin
