@@ -80,7 +80,7 @@ module dcache (
             next_state = idle;
         end else if(!(dpif.dmemREN || dpif.dmemWEN)) begin
             next_state = idle;
-        end else if((!cway[cur_lru].dtable[rq_index].dirty || (!cway[0].dtable[rq_index].valid && !cway[1].dtable[rq_index].valid)) && hit_out) begin
+        end else if((!cway[cur_lru].dtable[rq_index].dirty || (!cway[0].dtable[rq_index].valid && !cway[1].dtable[rq_index].valid)) && !hit_out) begin
             next_state = fetch1;
         end else if(!hit_out && cway[cur_lru].dtable[rq_index].dirty && cway[cur_lru].dtable[rq_index].valid) begin
             next_state = wb1;
@@ -222,7 +222,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[0].block[0]; //lower word
           ccif.daddr[CPUID] = { flushset[0].tag, flush_index, 1'b0 ,2'b00};
 
-          $display("FLUSHING 1 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[0].block[0], flushset[0].dirty, { flushset[0].tag, flush_index, 1'b0 ,2'b00});
+          //$display("FLUSHING 1 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[0].block[0], flushset[0].dirty, { flushset[0].tag, flush_index, 1'b0 ,2'b00});
 
       end
       flush2: begin
@@ -240,7 +240,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[0].block[1]; //upper word
           ccif.daddr[CPUID] = { flushset[0].tag, flush_index, 1'b1 ,2'b00};
 
-          $display("FLUSHING 2 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[0].block[1], flushset[0].dirty, { flushset[0].tag, flush_index, 1'b1 ,2'b00});
+          //$display("FLUSHING 2 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[0].block[1], flushset[0].dirty, { flushset[0].tag, flush_index, 1'b1 ,2'b00});
 
           //TODO we need to write hit count to memory
       end
@@ -260,7 +260,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[1].block[0]; //lower word
           ccif.daddr[CPUID] = { flushset[1].tag, flush_index, 1'b0 ,2'b00};
 
-          $display("FLUSHING 3 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[1].block[0], flushset[1].dirty, { flushset[1].tag, flush_index, 1'b0 ,2'b00});
+          //$display("FLUSHING 3 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[1].block[0], flushset[1].dirty, { flushset[1].tag, flush_index, 1'b0 ,2'b00});
 
 
       end
@@ -279,7 +279,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[1].block[1]; //upper word
           ccif.daddr[CPUID] = { flushset[1].tag, flush_index, 1'b1 ,2'b00};
 
-          $display("FLUSHING 4 : idx = %h, data = %h, dirty = %h, addr = %h \n", flush_index, flushset[1].block[1], flushset[1].dirty, { flushset[1].tag, flush_index, 1'b1 ,2'b00});
+          //$display("FLUSHING 4 : idx = %h, data = %h, dirty = %h, addr = %h \n", flush_index, flushset[1].block[1], flushset[1].dirty, { flushset[1].tag, flush_index, 1'b1 ,2'b00});
 
       end
 
@@ -298,16 +298,19 @@ module dcache (
             ccif.dREN = 0; 
             ccif.dWEN = 0;
             hit_wait_count_next = 0;
-            next_lru = hit0;
 
             if(hit_out) begin
+                next_lru = hit0;
 
                 if(hit_wait_count < 1) begin
                     hitcount_next = hitcount + 1;
                 end
 
                 if(dpif.dmemWEN == 1'b1) begin
-                    $display("idle WRITING SW lru = %d, idx = %d", cur_lru, rq_index);
+
+                    next_lru = !LRU[rq_index]; //?
+
+                    $display("IDLE WRITING CACHE: LRU = %d, IDX = %d, data = %h", cur_lru, rq_index, dpif.dmemstore);
                     FLUSH_INDEX_INCREM_EN = 0;
                     CACHE_WEN = 1;
 
@@ -319,6 +322,7 @@ module dcache (
                 end
 
             end else begin
+
                 CACHE_WEN = 0;
                 which_word = 0;
                 write_dirty = 0;
@@ -364,7 +368,7 @@ module dcache (
           end
 
           if(hit_out && dpif.dmemWEN) begin
-                $display("WRITING SW lru = %d, idx = %d", cur_lru, rq_index);
+                $display("FETCH2 WRITING CACHE: LRU = %d, IDX = %d, data = %h", cur_lru, rq_index, dpif.dmemstore);
 
                 FLUSH_INDEX_INCREM_EN  = 0;
                 CACHE_WEN = 1;
@@ -391,7 +395,7 @@ module dcache (
           FLUSH_INDEX_INCREM_EN  = 0;
           ccif.dWEN = 1; ccif.dREN = 0;
           ccif.dstore[CPUID] = cway[cur_lru].dtable[rq_index].block[0:0]; //cur_lru ---> (hit0 ? 1 : 0)
-          $display("HAO1 -------- %h", cway[cur_lru].dtable[rq_index].block[0:0]);
+          // $display("HAO1 -------- %h", cway[cur_lru].dtable[rq_index].block[0:0]);
       end
       wb2: begin
           CACHE_WEN = 0;
@@ -407,7 +411,7 @@ module dcache (
           ccif.dWEN = 1; ccif.dREN = 0;
           ccif.dstore[CPUID] = cway[cur_lru].dtable[rq_index].block[1:1]; //(hit0 ? 1 : 0)
 
-          $display("HAO2 -------- %h", cway[cur_lru].dtable[rq_index].block[1:1]);
+          // $display("HAO2 -------- %h", cway[cur_lru].dtable[rq_index].block[1:1]);
 
       end
       default: begin
@@ -434,10 +438,17 @@ module dcache (
       if(!nRST) begin
           cway <= '0;
       end else if(CACHE_WEN) begin
-          cway[cur_lru].dtable[rq_index].tag <= write_tag;
-          cway[cur_lru].dtable[rq_index].block[which_word] <= write_data; //ccif.dload[CPUID]
-          cway[cur_lru].dtable[rq_index].valid <= write_valid;
-          cway[cur_lru].dtable[rq_index].dirty <= write_dirty;
+          if(hit_out) begin
+                cway[!hit0].dtable[rq_index].tag <= write_tag;
+                cway[!hit0].dtable[rq_index].block[which_word] <= write_data; //ccif.dload[CPUID]
+                cway[!hit0].dtable[rq_index].valid <= write_valid;
+                cway[!hit0].dtable[rq_index].dirty <= write_dirty;
+          end else begin
+                cway[cur_lru].dtable[rq_index].tag <= write_tag;
+                cway[cur_lru].dtable[rq_index].block[which_word] <= write_data; //ccif.dload[CPUID]
+                cway[cur_lru].dtable[rq_index].valid <= write_valid;
+                cway[cur_lru].dtable[rq_index].dirty <= write_dirty;
+          end
       end
   end
 
@@ -459,8 +470,8 @@ module dcache (
         state <= next_state;
         hitcount <= hitcount_next;
         hit_wait_count <= hit_wait_count_next;
-        $display("idle count : %d", hit_wait_count);
-        $display("hit count : %d", hitcount);
+        //$display("idle count : %d", hit_wait_count);
+        //$display("hit count : %d", hitcount);
     end
   end
 
