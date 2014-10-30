@@ -33,7 +33,7 @@ module dcache (
   StateType state, next_state;
 
   logic [25:0] rq_tag;
-  logic [2:0] rq_index;
+  logic [3:0] rq_index;
   logic hit_out, hit0, hit1;
   logic tag_match0, tag_match1;
   logic cur_lru, rq_blockoffset;
@@ -365,12 +365,11 @@ module dcache (
           write_valid = 0;
           write_tag = 0;
           write_data = 0;
-          ccif.daddr = {cway[cur_lru].dtable[rq_index].tag, rq_index, 3'b000};
+          ccif.daddr = {rq_tag, rq_index, 3'b000};
 
           FLUSH_INDEX_INCREM_EN  = 0;
           ccif.dWEN = 1; ccif.dREN = 0;
-          ccif.dstore[CPUID] = cway[cur_lru].dtable[rq_index].block[0:0]; //cur_lru ---> (hit0 ? 1 : 0)
-          $display("HAO1 -------- %h", cway[cur_lru].dtable[rq_index].block[0:0]);
+          ccif.dstore[CPUID] = cway[cur_lru].dtable[rq_index].block[0]; //cur_lru ---> (hit0 ? 1 : 0)
       end
       wb2: begin
           CACHE_WEN = 0;
@@ -382,12 +381,9 @@ module dcache (
           write_data = 0;
 
           FLUSH_INDEX_INCREM_EN  = 0;
-          ccif.daddr = {cway[cur_lru].dtable[rq_index].tag, rq_index, 3'b100};
+          ccif.daddr = {rq_tag, rq_index, 3'b100};
           ccif.dWEN = 1; ccif.dREN = 0;
-          ccif.dstore[CPUID] = cway[cur_lru].dtable[rq_index].block[1:1]; //(hit0 ? 1 : 0)
-
-          $display("HAO2 -------- %h", cway[cur_lru].dtable[rq_index].block[1:1]);
-
+          ccif.dstore[CPUID] = cway[cur_lru].dtable[rq_index].block[1]; //(hit0 ? 1 : 0)
       end
       default: begin
         $display("entered default");
