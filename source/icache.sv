@@ -44,7 +44,6 @@ module icache (
 
 
 
-
   always_ff @ (posedge CLK, negedge nRST) begin : ICACHE
     if(!nRST) begin
       //initially clear the table

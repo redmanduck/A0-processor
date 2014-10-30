@@ -7,15 +7,7 @@
   ori   $5, $zero, 0x400
   addu  $6, $2, $2
   addu  $7, $2, $2
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
+  sw    $7, 0($1)
   halt      # that's all
 
-  org   0x00F0
-  cfw   0x7337
-  cfw   0x2701
-  cfw   0x1337
+

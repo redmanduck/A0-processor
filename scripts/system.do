@@ -81,7 +81,7 @@ add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/forward
 add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/FWU/fw_if/forwardB
 add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/fwif/forwardR1
 add wave -noupdate -expand -group FWUNIT /system_tb/DUT/CPU/DP/fwif/forwardR2
-add wave -noupdate /system_tb/DUT/CPU/DP/RF/regs
+add wave -noupdate -expand /system_tb/DUT/CPU/DP/RF/regs
 add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/halt
 add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/iREN
 add wave -noupdate -expand -group {Control Unit} /system_tb/DUT/CPU/DP/CU/cuif/dWEN
@@ -151,7 +151,6 @@ add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/dmemWEN
 add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/flushed
 add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/dmemload
 add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/dmemstore
-add wave -noupdate -expand -group dpif /system_tb/DUT/CPU/DP/dpif/dmemaddr
 add wave -noupdate -expand -group rfif /system_tb/DUT/CPU/DP/rfif/WEN
 add wave -noupdate -expand -group rfif /system_tb/DUT/CPU/DP/rfif/wsel
 add wave -noupdate -expand -group rfif /system_tb/DUT/CPU/DP/rfif/rsel1
@@ -184,7 +183,7 @@ add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/iload
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/dload
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/dstore
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/iaddr
-add wave -noupdate -expand -group ccif -radix hexadecimal -childformat {{{/system_tb/DUT/CPU/ccif/daddr[1]} -radix hexadecimal} {{/system_tb/DUT/CPU/ccif/daddr[0]} -radix hexadecimal}} -expand -subitemconfig {{/system_tb/DUT/CPU/ccif/daddr[1]} {-radix hexadecimal} {/system_tb/DUT/CPU/ccif/daddr[0]} {-radix hexadecimal}} /system_tb/DUT/CPU/ccif/daddr
+add wave -noupdate -expand -group ccif -radix hexadecimal -childformat {{{/system_tb/DUT/CPU/ccif/daddr[1]} -radix hexadecimal} {{/system_tb/DUT/CPU/ccif/daddr[0]} -radix hexadecimal}} -expand -subitemconfig {{/system_tb/DUT/CPU/ccif/daddr[1]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/ccif/daddr[0]} {-height 17 -radix hexadecimal}} /system_tb/DUT/CPU/ccif/daddr
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/ccwait
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/ccinv
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/ccwrite
@@ -198,8 +197,9 @@ add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/ramstore
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/ramload
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/CLK
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nRST
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/DP/dpif/dmemaddr
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/LRU
-add wave -noupdate -expand -group DCACHE -expand -subitemconfig {{/system_tb/DUT/CPU/CM/DCACHE/cway[1]} -expand {/system_tb/DUT/CPU/CM/DCACHE/cway[1].dtable} -expand {/system_tb/DUT/CPU/CM/DCACHE/cway[0]} -expand {/system_tb/DUT/CPU/CM/DCACHE/cway[0].dtable} -expand {/system_tb/DUT/CPU/CM/DCACHE/cway[0].dtable[6]} -expand} /system_tb/DUT/CPU/CM/DCACHE/cway
+add wave -noupdate -expand -group DCACHE -expand -subitemconfig {{/system_tb/DUT/CPU/CM/DCACHE/cway[1]} -expand {/system_tb/DUT/CPU/CM/DCACHE/cway[1].dtable} -expand {/system_tb/DUT/CPU/CM/DCACHE/cway[0]} -expand {/system_tb/DUT/CPU/CM/DCACHE/cway[0].dtable} -expand} /system_tb/DUT/CPU/CM/DCACHE/cway
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/state
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/next_state
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/rq_tag
@@ -209,7 +209,7 @@ add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/hit0
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/hit1
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/tag_match0
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/tag_match1
-add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/cur_lru
+add wave -noupdate -expand -group DCACHE -color {Orange Red} /system_tb/DUT/CPU/CM/DCACHE/cur_lru
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/rq_blockoffset
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/FLUSH_INDEX_INCREM_EN
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/which_word
@@ -218,7 +218,7 @@ add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/write_vali
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/CACHE_WEN
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/write_data
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/write_tag
-add wave -noupdate -expand -group DCACHE -expand -subitemconfig {{/system_tb/DUT/CPU/CM/DCACHE/flushset[1]} -expand {/system_tb/DUT/CPU/CM/DCACHE/flushset[0]} -expand} /system_tb/DUT/CPU/CM/DCACHE/flushset
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/flushset
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/flush_index
 add wave -noupdate /system_tb/DUT/prif/ramREN
 add wave -noupdate /system_tb/DUT/prif/ramWEN
@@ -233,10 +233,10 @@ add wave -noupdate /system_tb/DUT/prif/memstore
 add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/flush_index
 add wave -noupdate /system_tb/DUT/CPU/CM/DCACHE/flushset
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {2326832 ps} 0}
+WaveRestoreCursors {{Cursor 1} {2902171 ps} 0}
 quietly wave cursor active 1
-configure wave -namecolwidth 231
-configure wave -valuecolwidth 161
+configure wave -namecolwidth 168
+configure wave -valuecolwidth 257
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -249,4 +249,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {2151968 ps} {2388448 ps}
+WaveRestoreZoom {2691521 ps} {3207646 ps}

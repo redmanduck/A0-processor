@@ -257,14 +257,15 @@ module datapath (
   // end
 
   assign xmem.WEN = !hzif.stall_xmem;
+  assign mweb.WEN = !hzif.stall_wb;
 
-  always_ff @(posedge CLK, negedge nRST) begin
-      if(!nRST) begin
-           mweb.WEN <= 1;
-      end else begin
-           mweb.WEN <= !stall;
-      end
-  end
+  // always_ff @(posedge CLK, negedge nRST) begin
+  //     if(!nRST) begin
+  //          mweb.WEN <= 1;
+  //     end else begin
+  //          mweb.WEN <= !stall;
+  //     end
+  // end
   
   assign fwif.id_rt = cuif.rt;
   assign fwif.id_rs = cuif.rs;
