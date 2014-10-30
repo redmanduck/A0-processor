@@ -80,7 +80,7 @@ module dcache (
             next_state = idle;
         end else if(!(dpif.dmemREN || dpif.dmemWEN)) begin
             next_state = idle;
-        end else if(!cway[cur_lru].dtable[rq_index].dirty || (!cway[0].dtable[rq_index].valid && !cway[1].dtable[rq_index].valid)) begin
+        end else if((!cway[cur_lru].dtable[rq_index].dirty || (!cway[0].dtable[rq_index].valid && !cway[1].dtable[rq_index].valid)) && hit_out) begin
             next_state = fetch1;
         end else if(!hit_out && cway[cur_lru].dtable[rq_index].dirty && cway[cur_lru].dtable[rq_index].valid) begin
             next_state = wb1;
@@ -159,12 +159,13 @@ module dcache (
      end
   end
 
+  logic next_lru;
   //STUFF
   always_ff @ (posedge CLK, negedge nRST) begin
     if(!nRST) begin
       LRU <= '0;
     end else if(hit_out) begin
-      LRU[rq_index] <= hit0;
+      LRU[rq_index] <= next_lru;
       $display("updating LRU at index %d to %d", rq_index, hit0);
     end
   end
@@ -202,6 +203,7 @@ module dcache (
     dcif.flushed = 0;
     hitcount_next = hitcount;
     hit_wait_count_next = hit_wait_count + 1;
+    next_lru = LRU[rq_index];
 
     casez(state)
       flush1: begin
@@ -220,7 +222,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[0].block[0]; //lower word
           ccif.daddr[CPUID] = { flushset[0].tag, flush_index, 1'b0 ,2'b00};
 
-          $display("FLUSHING 1 : idx = %h, data = %h, dirty = %h", flush_index, flushset[0].block[0], flushset[0].dirty);
+          $display("FLUSHING 1 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[0].block[0], flushset[0].dirty, { flushset[0].tag, flush_index, 1'b0 ,2'b00});
 
       end
       flush2: begin
@@ -238,7 +240,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[0].block[1]; //upper word
           ccif.daddr[CPUID] = { flushset[0].tag, flush_index, 1'b1 ,2'b00};
 
-          $display("FLUSHING 2 : idx = %h, data = %h, dirty = %h", flush_index, flushset[0].block[1], flushset[0].dirty);
+          $display("FLUSHING 2 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[0].block[1], flushset[0].dirty, { flushset[0].tag, flush_index, 1'b1 ,2'b00});
 
           //TODO we need to write hit count to memory
       end
@@ -258,7 +260,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[1].block[0]; //lower word
           ccif.daddr[CPUID] = { flushset[1].tag, flush_index, 1'b0 ,2'b00};
 
-          $display("FLUSHING 3 : idx = %h, data = %h, dirty = %h", flush_index, flushset[1].block[0], flushset[1].dirty);
+          $display("FLUSHING 3 : idx = %h, data = %h, dirty = %h, addr = %h", flush_index, flushset[1].block[0], flushset[1].dirty, { flushset[1].tag, flush_index, 1'b0 ,2'b00});
 
 
       end
@@ -277,7 +279,7 @@ module dcache (
           ccif.dstore[CPUID] = flushset[1].block[1]; //upper word
           ccif.daddr[CPUID] = { flushset[1].tag, flush_index, 1'b1 ,2'b00};
 
-          $display("FLUSHING 4 : idx = %h, data = %h, dirty = %h\n", flush_index, flushset[1].block[1], flushset[1].dirty);
+          $display("FLUSHING 4 : idx = %h, data = %h, dirty = %h, addr = %h \n", flush_index, flushset[1].block[1], flushset[1].dirty, { flushset[1].tag, flush_index, 1'b1 ,2'b00});
 
       end
 
@@ -296,6 +298,7 @@ module dcache (
             ccif.dREN = 0; 
             ccif.dWEN = 0;
             hit_wait_count_next = 0;
+            next_lru = hit0;
 
             if(hit_out) begin
 
