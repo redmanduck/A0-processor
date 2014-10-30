@@ -169,7 +169,25 @@ module dcache (
     end
   end
 
- assign dpif.dmemload = (hit0 ? cway[0].dtable[rq_index].block[rq_blockoffset] : (hit1 ? cway[1].dtable[rq_index].block[rq_blockoffset] : 32'hbad1bad2 ));
+ //assign dpif.dmemload = (hit0 ? cway[0].dtable[rq_index].block[rq_blockoffset] : (hit1 ? cway[1].dtable[rq_index].block[rq_blockoffset] : 32'hbad1bad2 ));
+
+ always_comb begin: Eric
+   if(hit0 == 1) begin
+      if(rq_blockoffset == 0) begin
+        dpif.dmemload = cway[0].dtable[rq_index].block[0:0];
+      end else begin
+        dpif.dmemload = cway[0].dtable[rq_index].block[1:1];
+      end
+   end else if(hit1 == 1) begin
+      if(rq_blockoffset == 0) begin
+        dpif.dmemload = cway[1].dtable[rq_index].block[0:0];
+      end else begin
+        dpif.dmemload = cway[1].dtable[rq_index].block[1:1];
+      end
+   end else begin
+      dpif.dmemload = 32'hbad0bad0;
+   end
+ end
 
   always_comb begin : output_logic_fsm
     CACHE_WEN = 0;
@@ -432,6 +450,7 @@ module dcache (
     if(!nRST) begin
         state <= idle;
         hitcount <= 0;
+
         hit_wait_count <= 0;
     end else begin
         state <= next_state;
